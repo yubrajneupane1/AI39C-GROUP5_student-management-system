@@ -1,5 +1,5 @@
 from flask import Blueprint
-
+from flask import render_template
 class AuthRoutes:
 
     def __init__(self):
