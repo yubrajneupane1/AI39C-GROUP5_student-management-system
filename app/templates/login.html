@@ -1,9 +1,39 @@
-{% extends 'layouts/base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Acadlytics Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 
-{% block content %}
-<form method="POST">
-    <input type="text" name="username">
-    <input type="password" name="password">
-    <button type="submit">Login</button>
-</form>
-{% endblock %}
+<body>
+
+    <div class="login-box">
+
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo">
+
+        <p class="text">Sign in to continue</p>
+
+        <form method="POST">
+
+            <label>Username</label>
+            <input
+                type="text"
+                name="username"
+                placeholder="Enter username"
+            >
+
+            <label>Password</label>
+            <input
+                type="password"
+                name="password"
+                placeholder="Enter password"
+            >
+
+            <button type="submit">Login</button>
+
+        </form>
+
+    </div>
+
+</body>
+</html>
