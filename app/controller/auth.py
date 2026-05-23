@@ -1,4 +1,5 @@
 from app.models.user_model import UserModel
+from werkzeug.security import check_password_hash
 
 class AuthController:
 
