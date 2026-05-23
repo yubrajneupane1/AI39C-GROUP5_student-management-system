@@ -1,4 +1,10 @@
 from app.models.basemodel import BaseModel
 
 class AttendanceModel(BaseModel):
-    pass
+    def get_all_attendance(self):
+        query = """
+            SELECT * FROM attendance
+            ORDER BY attendance_date DESC
+        """
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
