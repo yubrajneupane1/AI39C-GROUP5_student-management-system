@@ -1,5 +1,5 @@
 from app.models.database import Database
-
+from werkzeug.security import generate_password_hash
 class BaseModel:
 
     def __init__(self):
