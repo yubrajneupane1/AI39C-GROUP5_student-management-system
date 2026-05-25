@@ -1,5 +1,51 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Marks{% endblock %}
 
 {% block content %}
-<h2>Academic Results</h2>
+<div class="dashboard-header">
+    <h1>Marks</h1>
+    <p>Your academic performance</p>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <h4>Average Score</h4>
+        <h2>{{ average }}%</h2>
+    </div>
+    <div class="card">
+        <h4>Total Assessments</h4>
+        <h2>{{ records | length }}</h2>
+    </div>
+</div>
+
+<div class="courses-section">
+    <h2>Mark Records</h2>
+    {% if records %}
+        {% for r in records %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ r.title }} — {{ r.course_name }}</h3>
+                <span class="grade">{{ r.score }} / {{ r.total }}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" data-width="{{ r.percentage }}"></div>
+            </div>
+            <p class="record-date">{{ r.percentage }}%</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No marks recorded yet</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    document.querySelectorAll('.progress[data-width]').forEach(function(el) {
+        el.style.width = el.getAttribute('data-width') + '%';
+    });
+</script>
 {% endblock %}
