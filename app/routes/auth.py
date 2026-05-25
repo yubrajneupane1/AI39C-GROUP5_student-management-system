@@ -9,6 +9,9 @@ class AuthRoutes:
     @self.bp.route("/login")
     def login():
         return render_template("login.html")
+    
+    session["user_id"] = user["id"]
+    session["role"] = user["role"]
 
     def register(self):
         return self.bp
