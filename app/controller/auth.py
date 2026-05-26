@@ -10,6 +10,8 @@ class AuthController:
         return self.user_model.get_user_by_username(username)
     def validate_login(self, username, password):
         user = self.user_model.get_user_by_username(username)
+    
+ 
 
         if not user:
             return False
@@ -18,3 +20,6 @@ class AuthController:
         user["password"],
         password
     )
+
+    session["user_id"] = user.id
+    session["role"] = user.role
