@@ -13,7 +13,7 @@ class User(BaseModel):
         self.name = name
         self.email = email
         self.username = username
-        self._password = None  # Changed from __password to _password
+        self._password = None  
         self.role = role
         if password:
             self.set_password(password)
@@ -22,7 +22,7 @@ class User(BaseModel):
         self._password = generate_password_hash(plain_password)
 
     def check_password(self, plain_password):
-        """Check if the provided password matches the stored hash"""
+        
         if not self._password:
             return False
         return check_password_hash(self._password, plain_password)
@@ -46,7 +46,7 @@ class User(BaseModel):
         user.name = data.get("fullname")
         user.username = data.get("username")
         user.email = data.get("email")
-        user._password = data.get("password")  # Use _password
+        user._password = data.get("password")  
         user.role = data.get("role")
         return user
 
