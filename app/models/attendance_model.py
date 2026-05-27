@@ -10,3 +10,8 @@ class AttendanceModel(BaseModel):
         return self.cursor.fetchall()
     
     def mark_attendance(self,student_id,attendance_date,status):
+        query = """
+            INSERT INTO attendance
+            (student_id, attendance_date, status)
+                VALUES(%s,%s,%s)
+            """
