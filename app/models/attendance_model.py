@@ -8,3 +8,5 @@ class AttendanceModel(BaseModel):
         """
         self.cursor.execute(query)
         return self.cursor.fetchall()
+    
+    def mark_attendance(self,student_id,attendance_date,status):
