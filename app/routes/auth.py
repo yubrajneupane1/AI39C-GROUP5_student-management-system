@@ -20,3 +20,5 @@ class AuthRoutes:
     self.bp.route("/logout")(
     self.controller.logout
 )
+    def logout(self):
+      session.clear()
