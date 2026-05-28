@@ -5,7 +5,11 @@ class AuthRoutes:
 
     def __init__(self):
         self.bp = Blueprint("auth", __name__)
-    
+
+
+    def register(self):
+        return self.bp
+        
     @self.bp.route("/login")
     def login():
         return render_template("login.html")
@@ -13,5 +17,6 @@ class AuthRoutes:
     session["user_id"] = user["id"]
     session["role"] = user["role"]
 
-    def register(self):
-        return self.bp
+    self.bp.route("/logout")(
+    self.controller.logout
+)
