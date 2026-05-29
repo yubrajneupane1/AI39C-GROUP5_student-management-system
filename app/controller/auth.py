@@ -23,3 +23,15 @@ class AuthController:
 
     session["user_id"] = user.id
     session["role"] = user.role
+
+    def register_user(
+        self,
+        username,
+        password,
+        role
+    ):
+       return self.user_model.create_user(
+        username,
+        password,
+        role
+    )
