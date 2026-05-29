@@ -11,3 +11,9 @@ def notifications():
     return render_template(
         "notifications.html"
     )
+
+@notification_bp.route("/preferences")
+def preferences():
+    return render_template(
+        "notification_preferences.html"
+    )
