@@ -10,3 +10,8 @@ def dashboard():
     return render_template(
         "student/dashboard.html"
     )
+@student_bp.route("/courses")
+def courses():
+    return render_template(
+        "student/courses.html"
+    )
