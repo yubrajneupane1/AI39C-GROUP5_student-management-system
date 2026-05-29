@@ -9,6 +9,9 @@ class AuthRoutes:
 
     def register(self):
         return self.bp
+    @self.bp.route("/register", methods=["GET", "POST"])
+    def register():
+        return render_template("register.html")
         
     @self.bp.route("/login")
     def login():
