@@ -1,8 +1,44 @@
-<table class="table">
-    <thead>
-        <tr>
-            <th>Student</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-</table>
+{% extends "layouts/base.html" %}
+
+{% block title %}Attendance - Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Attendance Management</h1>
+    <p>Mark and manage attendance for all courses</p>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="courses-section">
+    <h2>Courses</h2>
+    {% if courses %}
+        {% for c in courses %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ c.name }}</h3>
+                <div class="action-group">
+                    <span class="grade">{{ c.enrolled }} students</span>
+                    <a href="{{ url_for('attendance.mark_attendance', course_id=c.id) }}">
+                        <button class="edit-btn">Mark Attendance</button>
+                    </a>
+                </div>
+            </div>
+            <p class="record-date">Teacher: {{ c.teacher_name or 'Unassigned' }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No courses available</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
