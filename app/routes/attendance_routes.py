@@ -5,3 +5,9 @@ attendance_bp = Blueprint(
     __name__,
     url_prefix="/attendance"
 )
+
+@attendance_bp.route("/")
+def attendance():
+    return render_template(
+        "admin/attendance.html"
+    )
