@@ -1,5 +1,56 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Teacher{% endblock %}
 
 {% block content %}
-<h2>Teacher Dashboard</h2>
+<div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Overview of your students, courses, and resources</p>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <h4>Total Students</h4>
+        <h2>{{ total_students or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>My Courses</h4>
+        <h2>{{ total_courses or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Resources</h4>
+        <h2>{{ assignments or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Tasks</h4>
+        <h2>{{ total_tasks or 0 }}</h2>
+    </div>
+</div>
+
+<div class="courses-section">
+    <h2>My Students</h2>
+    {% if students %}
+        {% for s in students %}
+        <div class="course-box">
+            <div class="student-row">
+                <div class="student-avatar">{{ s.fullname[:2] }}</div>
+                <div class="student-info">
+                    <h3>{{ s.fullname }}</h3>
+                    <p>{{ s.email }}</p>
+                </div>
+                <div style="margin-left:auto;">
+                    <span class="grade">Student</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No students assigned yet</h3>
+            </div>
+            <p class="record-date">Students enrolled in your courses will appear here.</p>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
