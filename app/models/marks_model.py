@@ -7,3 +7,10 @@ class MarksModel(BaseModel):
         """
         self.cursor.execute(query)
         return self.cursor.fetchall()
+    
+    def add_marks(
+    self,
+    student_id,
+    subject,
+    marks
+        ): 
