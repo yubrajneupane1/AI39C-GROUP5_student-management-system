@@ -15,3 +15,15 @@ class AttendanceModel(BaseModel):
             (student_id, attendance_date, status)
                 VALUES(%s,%s,%s)
             """
+        self.cursor.execute(
+    query,
+    (
+        student_id,
+        attendance_date,
+        status
+    )
+    )
+
+        self.conn.commit()    
+
+
