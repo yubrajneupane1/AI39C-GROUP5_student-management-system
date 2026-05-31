@@ -8,9 +8,9 @@ class MarksModel(BaseModel):
         self.cursor.execute(query)
         return self.cursor.fetchall()
     
-    def add_marks(
-    self,
-    student_id,
-    subject,
-    marks
-        ): 
+    def add_marks(self,student_id,subject,marks): 
+        query = """
+            INSERT INTO marks
+            (student_id,subject,marks)
+            VALUES(%s,%s,%s)
+            """
