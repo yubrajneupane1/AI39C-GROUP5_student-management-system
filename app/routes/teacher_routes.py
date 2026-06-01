@@ -17,3 +17,9 @@ def students():
     return render_template(
         "teacher/students.html"
     )
+
+@teacher_bp.route("/teacher/courses")
+def courses():
+    return render_template(
+        "teacher/courses.html"
+    )
