@@ -11,3 +11,9 @@ def dashboard():
     return render_template(
         "teacher/dashboard.html"
     )
+
+@teacher_bp.route("/students")
+def students():
+    return render_template(
+        "teacher/students.html"
+    )
