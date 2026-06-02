@@ -5,7 +5,15 @@ class AttendanceModel(BaseModel):
     self,
     student_id
     ):
-        pass
+        return self.db.fetch(
+    """
+    SELECT *
+    FROM attendance
+    WHERE student_id=%s
+    ORDER BY date DESC
+    """,
+    (student_id,)
+    )
     def get_all_attendance(self):
         query = """
             SELECT * FROM attendance
