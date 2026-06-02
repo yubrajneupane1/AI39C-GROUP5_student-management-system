@@ -1,4 +1,5 @@
 from app.models.basemodel import BaseModel
+from datetime import datetime
 
 class MarksModel(BaseModel):
     def get_all_marks(self):
