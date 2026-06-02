@@ -15,3 +15,13 @@ class MarksModel(BaseModel):
             (student_id,subject,marks)
             VALUES(%s,%s,%s)
             """
+    def get_student_marks(self, student_id):
+        return self.db.fetch(
+        """
+        SELECT *
+        FROM marks
+        WHERE student_id=%s
+        ORDER BY date DESC
+        """,
+        (student_id,)
+    )
