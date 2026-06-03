@@ -25,3 +25,6 @@ class AuthRoutes:
 )
     def logout(self):
       session.clear()
+    
+    def current_user(self):
+        return session.get("user_id")
