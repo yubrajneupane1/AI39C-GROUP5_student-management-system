@@ -9,3 +9,16 @@ def get_notifications(self):
     """
     self.cursor.execute(query)
     return self.cursor.fetchall()
+
+def get_unread_count(self, user_id):
+    result = self.db.fetchone(
+        """
+        SELECT COUNT(*) AS total
+        FROM notifications
+        WHERE user_id=%s
+        AND is_read=0
+        """,
+        (user_id,)
+    )
+
+    return result["total"]
