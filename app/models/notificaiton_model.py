@@ -22,3 +22,8 @@ def get_unread_count(self, user_id):
     )
 
     return result["total"]
+
+def mark_as_read(
+    self,
+    notification_id
+):
