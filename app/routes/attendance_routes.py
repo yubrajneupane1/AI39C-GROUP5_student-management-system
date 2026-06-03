@@ -8,6 +8,8 @@ attendance_bp = Blueprint(
 
 @attendance_bp.route("/")
 def attendance():
-    return render_template(
-        "admin/attendance.html"
-    )
+    return render_templates("admin/attendance.html")
+    
+@attendance_bp.route("/mark")
+def mark_attendance():
+    return render_templates("teacher/mark_attendance.html")
