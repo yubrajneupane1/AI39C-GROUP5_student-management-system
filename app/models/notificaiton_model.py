@@ -27,3 +27,9 @@ def mark_as_read(
     self,
     notification_id
 ):
+    
+    query = """
+UPDATE notifications
+SET is_read=1
+WHERE id=%s
+"""
