@@ -32,4 +32,9 @@ def get_user_notifications(
     self,
     user_id
 ):
+  query = """
+UPDATE notifications
+SET is_read=1
+WHERE id=%s
+"""
   return self.cursor.fetchall()
