@@ -1,6 +1,11 @@
 from app.models.basemodel import BaseModel
 
 class AttendanceModel(BaseModel):
+    def get_student_attendance(
+    self,
+    student_id
+    ):
+        pass
     def get_all_attendance(self):
         query = """
             SELECT * FROM attendance
