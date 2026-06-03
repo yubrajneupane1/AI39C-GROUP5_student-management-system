@@ -20,3 +20,8 @@ def attendance():
     return render_template(
         "student/attendance.html"
     )
+@student_bp.route("/student/marks")
+def marks():
+    return render_template(
+        "student/marks.html"
+    )
