@@ -17,3 +17,8 @@ def students():
     return render_template(
         "admin/students.html"
     )
+
+@admin_bp.route("/assign-course")
+def assign_course():
+    return render_template(
+        "admin/assign_course.html"
