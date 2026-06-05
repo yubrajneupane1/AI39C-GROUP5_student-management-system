@@ -25,3 +25,8 @@ def marks():
     return render_template(
         "student/marks.html"
     )
+@student_bp.route("/student/fees")
+def fees():
+    return render_template(
+        "student/fees.html"
+    )
