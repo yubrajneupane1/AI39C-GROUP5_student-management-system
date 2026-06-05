@@ -1,5 +1,50 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Fees{% endblock %}
 
 {% block content %}
-<h2>Fee Information</h2>
+<div class="dashboard-header">
+    <h1>Fees</h1>
+    <p>Your fee payment status</p>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <h4>Total Fees</h4>
+        <h2>Rs {{ total }}</h2>
+    </div>
+    <div class="card">
+        <h4>Paid</h4>
+        <h2 class="text-green">Rs {{ paid }}</h2>
+    </div>
+    <div class="card">
+        <h4>Unpaid</h4>
+        <h2 class="text-red">Rs {{ unpaid }}</h2>
+    </div>
+</div>
+
+<div class="courses-section">
+    <h2>Fee Records</h2>
+    {% if records %}
+        {% for r in records %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ r.description }}</h3>
+                <span class="grade {{ r.status }}">
+                    {{ r.status | capitalize }}
+                </span>
+            </div>
+            <p class="record-date">
+                Amount: Rs {{ r.amount }} &nbsp;|&nbsp; Due: {{ r.due_date }}
+            </p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No fee records yet</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
