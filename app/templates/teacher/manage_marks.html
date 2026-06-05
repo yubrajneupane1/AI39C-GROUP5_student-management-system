@@ -1,5 +1,96 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Manage Marks - {{ course.name }}{% endblock %}
 
 {% block content %}
-<h2>Teacher Marks Entry</h2>
+<div class="dashboard-header">
+    <h1>Manage Marks - {{ course.name }}</h1>
+    <p>Add and manage marks for students</p>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Add Marks Form -->
+<div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+    <h3>Add New Marks</h3>
+    <form method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div>
+                <label>Assessment Title</label>
+                <input type="text" name="title" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            </div>
+            <div>
+                <label>Total Marks</label>
+                <input type="number" name="total" value="100" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            </div>
+            <div>
+                <label>Exam Type</label>
+                <select name="exam_type" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <option value="assignment">Assignment</option>
+                    <option value="quiz">Quiz</option>
+                    <option value="midterm">Midterm</option>
+                    <option value="final">Final</option>
+                    <option value="project">Project</option>
+                </select>
+            </div>
+        </div>
+        
+        <div style="margin-top: 16px;">
+            <h4>Student Scores</h4>
+            {% if students %}
+                {% for s in students %}
+                <div style="display: flex; align-items: center; gap: 16px; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="width: 200px;"><strong>{{ s.fullname }}</strong></span>
+                    <input type="number" name="score_{{ s.id }}" step="0.5" placeholder="Score" style="width: 120px; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <span style="color: #64748b; font-size: 13px;">Current Avg: {{ s.avg_percentage or 0 }}% ({{ s.marks_count or 0 }} marks)</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No students enrolled in this course.</p>
+            {% endif %}
+        </div>
+        
+        <div style="margin-top: 16px;">
+            <button type="submit" class="btn-primary">Save Marks</button>
+            <a href="/teacher/marks">
+                <button type="button" class="logout-btn" style="margin-left: 10px;">Cancel</button>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Existing Marks -->
+<div class="courses-section">
+    <h2>Existing Marks</h2>
+    {% if existing_marks %}
+        {% for m in existing_marks %}
+        <div class="course-box">
+            <div class="course-top">
+                <div>
+                    <h3>{{ m.title }}</h3>
+                    <p style="font-size: 13px; color: #64748b;">Student: {{ m.student_name }}</p>
+                </div>
+                <div class="action-group">
+                    <span class="grade">{{ m.score }}/{{ m.total }}</span>
+                    <span class="grade">{{ (m.score / m.total * 100)|round }}%</span>
+                </div>
+            </div>
+            <p class="record-date">Type: {{ m.exam_type }} | Date: {{ m.date }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No marks recorded yet</h3>
+            </div>
+            <p class="record-date">Use the form above to add marks for students.</p>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
