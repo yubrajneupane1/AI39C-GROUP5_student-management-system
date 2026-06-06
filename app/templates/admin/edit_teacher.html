@@ -1,5 +1,61 @@
-{% extends 'layouts/base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Teacher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li><a href="/admin/students">Students</a></li>
+            <li class="active"><a href="/admin/teachers">Teachers</a></li>
+            <li><a href="/admin/courses">Courses</a></li>
+            <li><a href="/admin/assign">Assign Course</a></li>
+            <li><a href="/admin/attendance">Attendance</a></li>
+            <li><a href="/admin/marks">Marks</a></li>
+            <li><a href="/admin/fees">Fees</a></li>
+            <li><a href="/admin/reports">Reports</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div class="topbar">
+            <div><h3>Welcome, {{ username }}</h3><p>{{ role }}</p></div>
+            <a href="{{ url_for('auth.logout') }}"><button class="logout-btn">Switch Account</button></a>
+        </div>
+        <div class="dashboard-header">
+            <h1>Edit Teacher</h1>
+            <p>Update teacher details</p>
+        </div>
 
-{% block content %}
-<h2>Edit Teacher</h2>
-{% endblock %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-section">
+            <form method="POST">
+                <label>Full Name</label>
+                <input type="text" name="fullname" value="{{ teacher.fullname }}" required>
+
+                <label>Email</label>
+                <input type="email" name="email" value="{{ teacher.email }}" required>
+
+                <label>Username</label>
+                <input type="text" name="username" value="{{ teacher.username }}" required>
+
+                <button type="submit">Save Changes</button>
+                <a href="/admin/teachers">
+                    <button type="button" class="logout-btn" style="margin-top:10px;">Cancel</button>
+                </a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
