@@ -20,3 +20,4 @@ def preferences():
 @notification_bp.route("/mark-read/<int:id>")
 def mark_read(id):
     pass
+notification_model.mark_as_read(id)
