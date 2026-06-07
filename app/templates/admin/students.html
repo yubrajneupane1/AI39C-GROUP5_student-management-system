@@ -1,13 +1,74 @@
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-        </tr>
-    </thead>
-</table>
-{% extends 'layouts/base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Acadlytics Students</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li class="active"><a href="/admin/students">Students</a></li>
+            <li><a href="/admin/teachers">Teachers</a></li>
+            <li><a href="/admin/courses">Courses</a></li>
+            <li><a href="/admin/assign">Assign Course</a></li>
+            <li><a href="/admin/attendance">Attendance</a></li>
+            <li><a href="/admin/marks">Marks</a></li>
+            <li><a href="/admin/fees">Fees</a></li>
+            <li><a href="/admin/reports">Reports</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div class="topbar">
+            <div><h3>Welcome, {{ username }}</h3><p>{{ role }}</p></div>
+            <a href="{{ url_for('auth.logout') }}"><button class="logout-btn">Switch Account</button></a>
+        </div>
+        <div class="dashboard-header">
+            <h1>Students</h1>
+            <p>All registered students</p>
+        </div>
 
-{% block content %}
-<h2>Assigned Students</h2>
-{% endblock %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="topbar-action">
+            <a href="/admin/users/create"><button class="add-btn">+ Create User</button></a>
+        </div>
+
+        <div class="courses-section">
+            <h2>Student List</h2>
+            {% if students %}
+                {% for s in students %}
+                <div class="course-box">
+                    <div class="course-top">
+                        <h3>{{ s.fullname }}</h3>
+                        <div class="action-group">
+                            <span class="grade">Student</span>
+                            <a href="/admin/students/edit/{{ s.id }}">
+                                <button class="edit-btn">Edit</button>
+                            </a>
+                            <form method="POST" action="/admin/students/delete/{{ s.id }}" style="display:inline;" onsubmit="return confirm('Delete {{ s.fullname }}? This will remove all their records.');">
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                    <p class="record-date">{{ s.email }} &nbsp;|&nbsp; @{{ s.username }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="course-box">
+                    <div class="course-top"><h3>No students registered yet</h3></div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
