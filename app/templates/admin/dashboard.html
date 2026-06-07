@@ -1,12 +1,71 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-
-<div class="container">
+<div class="dashboard-header">
     <h1>Admin Dashboard</h1>
+    <p>Manage your institution</p>
 </div>
 
-<div class="quick-actions">
+<div class="cards">
+    <div class="card">
+        <h4>Total Students</h4>
+        <h2>{{ total_students or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Total Teachers</h4>
+        <h2>{{ total_teachers or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Total Courses</h4>
+        <h2>{{ total_courses or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Pending Fees</h4>
+        <h2>Rs {{ pending_fees or 0 }}</h2>
+    </div>
 </div>
 
+<div class="courses-section">
+    <h2>Recent Students</h2>
+    {% if students %}
+        {% for s in students %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ s.fullname }}</h3>
+                <span class="grade">Student</span>
+            </div>
+            <p class="record-date">{{ s.email }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No students yet</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="courses-section">
+    <h2>Teachers</h2>
+    {% if teachers %}
+        {% for t in teachers %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ t.fullname }}</h3>
+                <span class="grade">Teacher</span>
+            </div>
+            <p class="record-date">{{ t.email }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No teachers yet</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
