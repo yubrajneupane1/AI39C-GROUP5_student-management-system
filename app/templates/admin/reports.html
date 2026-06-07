@@ -1,5 +1,143 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Reports - Admin{% endblock %}
 
 {% block content %}
-<h2>Reports & Analytics</h2>
+<div class="dashboard-header">
+    <h1>Reports</h1>
+    <p>Complete overview of your institution</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="cards">
+    <div class="card">
+        <h4>Total Students</h4>
+        <h2>{{ stats.total_students or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Total Teachers</h4>
+        <h2>{{ stats.total_teachers or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Total Courses</h4>
+        <h2>{{ stats.total_courses or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Total Enrollments</h4>
+        <h2>{{ stats.total_enrollments or 0 }}</h2>
+    </div>
+</div>
+
+<!-- Attendance Statistics -->
+<div class="courses-section">
+    <h2>Attendance Statistics</h2>
+    <div class="cards">
+        <div class="card">
+            <h4>Overall Attendance</h4>
+            <h2>{{ attendance_stats.overall_percentage or 0 }}%</h2>
+        </div>
+        <div class="card">
+            <h4>Present</h4>
+            <h2 class="text-green">{{ attendance_stats.present_count or 0 }}</h2>
+        </div>
+        <div class="card">
+            <h4>Total Records</h4>
+            <h2>{{ attendance_stats.total_records or 0 }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Course Performance -->
+<div class="courses-section">
+    <h2>Course Performance</h2>
+    {% if course_performance %}
+        {% for c in course_performance %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ c.name }}</h3>
+                <div class="action-group">
+                    <span class="grade">{{ c.avg_marks or 0 }}%</span>
+                    <span class="grade">{{ c.completion_rate or 0 }}% Complete</span>
+                </div>
+            </div>
+            <p class="record-date">
+                Students: {{ c.total_students or 0 }} | 
+                Attendance: {{ c.avg_attendance or 0 }}% | 
+                Tasks: {{ c.total_submissions or 0 }}/{{ c.total_tasks or 0 }} submitted
+            </p>
+            <div class="progress-bar">
+                <div class="progress" style="width: {{ c.completion_rate or 0 }}%; background: {% if (c.completion_rate or 0) >= 70 %}#16a34a{% elif (c.completion_rate or 0) >= 40 %}#f59e0b{% else %}#dc2626{% endif %};"></div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No course performance data</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Student Performance -->
+<div class="courses-section">
+    <h2>Student Performance</h2>
+    {% if student_performance %}
+        <div class="table-wrapper">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Courses</th>
+                        <th>Marks</th>
+                        <th>Attendance</th>
+                        <th>Tasks Done</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in student_performance %}
+                    <tr>
+                        <td>{{ s.fullname }}</td>
+                        <td>{{ s.enrolled_courses or 0 }}</td>
+                        <td>{{ s.avg_marks or 0 }}%</td>
+                        <td>{{ s.attendance_percentage or 0 }}%</td>
+                        <td>{{ s.completed_tasks or 0 }}/{{ s.total_tasks or 0 }}</td>
+                        <td><span class="grade">{{ s.grade or 'N/A' }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No student performance data</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Fee Summary -->
+<div class="courses-section">
+    <h2>Fee Summary</h2>
+    <div class="cards">
+        <div class="card">
+            <h4>Total Fees</h4>
+            <h2>Rs {{ fee_summary.total_fees or 0 }}</h2>
+        </div>
+        <div class="card">
+            <h4>Collected</h4>
+            <h2 class="text-green">Rs {{ fee_summary.collected_fees or 0 }}</h2>
+        </div>
+        <div class="card">
+            <h4>Pending</h4>
+            <h2 class="text-red">Rs {{ fee_summary.pending_fees or 0 }}</h2>
+        </div>
+        <div class="card">
+            <h4>Paid Records</h4>
+            <h2>{{ fee_summary.paid_count or 0 }}</h2>
+        </div>
+    </div>
+</div>
 {% endblock %}
