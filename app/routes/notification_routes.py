@@ -17,3 +17,6 @@ def preferences():
     return render_template(
         "notification_preferences.html"
     )
+@notification_bp.route("/mark-read/<int:id>")
+def mark_read(id):
+    pass
