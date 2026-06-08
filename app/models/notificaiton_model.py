@@ -38,3 +38,6 @@ SET is_read=1
 WHERE id=%s
 """
   return self.cursor.fetchall()
+
+def get_recent_notifications(self, user_id):
+    pass
