@@ -25,3 +25,10 @@ class MarksModel(BaseModel):
         """,
         (student_id,)
     )
+    
+    def calculate_grade(marks):
+        if marks >= 80:
+            return "A"
+        elif marks >= 60:
+            return "B"
+        return "C"
