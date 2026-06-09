@@ -32,3 +32,6 @@ class MarksModel(BaseModel):
         elif marks >= 60:
             return "B"
         return "C"
+    
+    def get_class_average(self, subject):
+        pass
