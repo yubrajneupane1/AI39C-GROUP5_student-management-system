@@ -8,6 +8,11 @@ admin_bp = Blueprint(
 
 @admin_bp.route("/dashboard")
 def dashboard():
+    dashboard_data = {
+    "students": total_students["count"],
+    "teachers": total_teachers["count"],
+    "courses": total_courses["count"]
+}
     return render_template(
         "admin/dashboard.html"
     )
