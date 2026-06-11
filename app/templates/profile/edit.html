@@ -1,8 +1,452 @@
-{% extends 'layouts/base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Profile – Acadlytics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .edit-profile-form {
+            max-width: 600px;
+        }
+        .form-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--navy);
+            margin: 24px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+        .form-section-title:first-of-type {
+            margin-top: 0;
+        }
+        .password-hint {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: -12px;
+            margin-bottom: 14px;
+        }
+        .btn-save {
+            background: var(--green);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-save:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        .btn-cancel {
+            background: var(--bg);
+            color: var(--body-text);
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-cancel:hover {
+            background: var(--border);
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        .field-group {
+            margin-bottom: 16px;
+        }
+        .field-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--label);
+            display: block;
+            margin-bottom: 6px;
+        }
+        .field-group input,
+        .field-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-mid);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--body-text);
+            background: var(--surface);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .field-group input:focus,
+        .field-group textarea:focus {
+            outline: none;
+            border-color: var(--sky);
+            box-shadow: 0 0 0 3px rgba(19, 96, 238, 0.14);
+        }
+        .field-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .field-group .error-text {
+            color: var(--red);
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        .field-group.has-error input,
+        .field-group.has-error textarea {
+            border-color: var(--red);
+        }
+        .field-group.has-error .error-text {
+            display: block;
+        }
+        .password-toggle {
+            position: relative;
+        }
+        .password-toggle input {
+            padding-right: 44px;
+        }
+        .password-toggle .toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 16px;
+            width: auto;
+            padding: 0;
+        }
+        .password-toggle .toggle-btn:hover {
+            color: var(--body-text);
+        }
+        .password-requirements {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin: 8px 0 14px;
+        }
+        .password-requirements .req {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 3px;
+        }
+        .password-requirements .req.met {
+            color: var(--green);
+        }
+        .password-requirements .req .check {
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .strength-meter {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+        .strength-meter .bar {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background 0.3s;
+        }
+        .strength-label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        @media (max-width: 768px) {
+            .form-actions {
+                flex-direction: column;
+            }
+            .form-actions .btn-cancel,
+            .form-actions .btn-save {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </div>
+        <ul>
+            {% if role == 'admin' %}
+                <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('admin.students') }}">Students</a></li>
+                <li><a href="{{ url_for('admin.teachers') }}">Teachers</a></li>
+                <li><a href="{{ url_for('admin.courses') }}">Courses</a></li>
+                <li class="active"><a href="{{ url_for('profile.view_profile') }}">My Profile</a></li>
+            {% elif role == 'teacher' %}
+                <li><a href="{{ url_for('teacher.dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('teacher.students') }}">My Students</a></li>
+                <li><a href="{{ url_for('teacher.courses') }}">My Courses</a></li>
+                <li><a href="{{ url_for('teacher.resources') }}">Resources</a></li>
+                <li class="active"><a href="{{ url_for('profile.view_profile') }}">My Profile</a></li>
+            {% else %}
+                <li><a href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('student.courses') }}">My Courses</a></li>
+                <li><a href="{{ url_for('student.attendance') }}">Attendance</a></li>
+                <li><a href="{{ url_for('student.marks') }}">Marks</a></li>
+                <li><a href="{{ url_for('student.fees') }}">Fees</a></li>
+                <li class="active"><a href="{{ url_for('profile.view_profile') }}">My Profile</a></li>
+            {% endif %}
+        </ul>
+        <div class="sidebar-footer">
+            <div class="sidebar-avatar">{{ username[:2] if username else 'U' }}</div>
+            <div class="sidebar-user-info">
+                <strong>{{ username }}</strong>
+                <span>{{ role }}</span>
+            </div>
+        </div>
+    </div>
 
-{% block content %}
-<h2>Edit Profile</h2>
+    <div class="main-content">
+        <div class="topbar">
+            <div>
+                <h3>Welcome, {{ username }}</h3>
+                <p>{{ role }}</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}">
+                <button class="logout-btn">🚪 Switch Account</button>
+            </a>
+        </div>
 
-<input type="email" name="email">
+        <div class="dashboard-header">
+            <h1>Edit Profile</h1>
+            <p>Update your account information</p>
+        </div>
 
-{% endblock %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg {% if category == 'error' %}flash-warn{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="edit-profile-form" id="profileForm" novalidate>
+            <!-- Personal Information -->
+            <h3 class="form-section-title">Personal Information</h3>
+            
+            <div class="field-group" id="fullname-group">
+                <label for="fullname">Full Name *</label>
+                <input type="text" id="fullname" name="fullname" value="{{ user.fullname }}" required>
+                <div class="error-text">Full name is required</div>
+            </div>
+
+            <div class="field-group" id="email-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                <div class="error-text">Please enter a valid email address</div>
+            </div>
+
+            <div class="field-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" value="{{ user.phone or '' }}" placeholder="e.g. +1234567890">
+            </div>
+
+            <div class="field-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="3" placeholder="Enter your address">{{ user.address or '' }}</textarea>
+            </div>
+
+            <!-- Change Password -->
+            <h3 class="form-section-title">Change Password</h3>
+            <p class="password-hint">Leave fields empty if you don't want to change your password</p>
+
+            <div class="field-group" id="current-password-group">
+                <label for="current_password">Current Password</label>
+                <div class="password-toggle">
+                    <input type="password" id="current_password" name="current_password" placeholder="Enter current password">
+                    <button type="button" class="toggle-btn" onclick="togglePassword('current_password', this)">👁</button>
+                </div>
+                <div class="error-text">Current password is required to change password</div>
+            </div>
+
+            <div class="field-group" id="new-password-group">
+                <label for="new_password">New Password</label>
+                <div class="password-toggle">
+                    <input type="password" id="new_password" name="new_password" placeholder="Enter new password (min 8 characters)">
+                    <button type="button" class="toggle-btn" onclick="togglePassword('new_password', this)">👁</button>
+                </div>
+                <div class="error-text">Password must be at least 8 characters with uppercase, lowercase, and numbers</div>
+            </div>
+
+            <div class="password-requirements" id="passwordRequirements" style="display:none;">
+                <div class="req" id="req-length">● At least 8 characters</div>
+                <div class="req" id="req-upper">● One uppercase letter</div>
+                <div class="req" id="req-lower">● One lowercase letter</div>
+                <div class="req" id="req-number">● One number</div>
+                <div class="req" id="req-special">● One special character (!@#$...)</div>
+            </div>
+
+            <div class="strength-meter" id="strengthMeter" style="display:none;">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel" style="display:none;">Password strength</div>
+
+            <div class="field-group" id="confirm-password-group">
+                <label for="confirm_password">Confirm New Password</label>
+                <div class="password-toggle">
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password">
+                    <button type="button" class="toggle-btn" onclick="togglePassword('confirm_password', this)">👁</button>
+                </div>
+                <div class="error-text">Passwords do not match</div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('profile.view_profile') }}" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">💾 Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function togglePassword(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🔓';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁';
+            }
+        }
+
+        // Password strength checker
+        const passwordInput = document.getElementById('new_password');
+        const checks = {
+            length: { el: document.getElementById('req-length'), fn: p => p.length >= 8 },
+            upper: { el: document.getElementById('req-upper'), fn: p => /[A-Z]/.test(p) },
+            lower: { el: document.getElementById('req-lower'), fn: p => /[a-z]/.test(p) },
+            number: { el: document.getElementById('req-number'), fn: p => /[0-9]/.test(p) },
+            special: { el: document.getElementById('req-special'), fn: p => /[^A-Za-z0-9]/.test(p) }
+        };
+        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+        const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+
+        passwordInput.addEventListener('input', function() {
+            const val = this.value;
+            if (!val) {
+                document.getElementById('strengthMeter').style.display = 'none';
+                document.getElementById('strengthLabel').style.display = 'none';
+                document.getElementById('passwordRequirements').style.display = 'none';
+                return;
+            }
+            document.getElementById('strengthMeter').style.display = 'flex';
+            document.getElementById('strengthLabel').style.display = 'block';
+            document.getElementById('passwordRequirements').style.display = 'block';
+
+            let score = 0;
+            for (const key in checks) {
+                const met = checks[key].fn(val);
+                checks[key].el.className = 'req' + (met ? ' met' : '');
+                if (met) score++;
+            }
+            
+            const bars = document.querySelectorAll('#strengthMeter .bar');
+            const lvl = Math.min(score - 1, 3);
+            bars.forEach((b, i) => {
+                b.style.background = i <= lvl && score > 0 ? colors[lvl] : '#e5e7eb';
+            });
+            
+            const label = document.getElementById('strengthLabel');
+            if (score > 0) {
+                label.textContent = 'Password strength: ' + labels[lvl];
+                label.style.color = colors[lvl];
+            }
+        });
+
+        // Form validation
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            let valid = true;
+
+            // Validate fullname
+            const fullname = document.getElementById('fullname');
+            const fullnameGroup = document.getElementById('fullname-group');
+            if (!fullname.value.trim()) {
+                fullnameGroup.classList.add('has-error');
+                valid = false;
+            } else {
+                fullnameGroup.classList.remove('has-error');
+            }
+
+            // Validate email
+            const email = document.getElementById('email');
+            const emailGroup = document.getElementById('email-group');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+                emailGroup.classList.add('has-error');
+                valid = false;
+            } else {
+                emailGroup.classList.remove('has-error');
+            }
+
+            // Validate password if trying to change it
+            const currentPw = document.getElementById('current_password');
+            const newPw = document.getElementById('new_password');
+            const confirmPw = document.getElementById('confirm_password');
+            
+            if (newPw.value || currentPw.value || confirmPw.value) {
+                // Check current password
+                if (!currentPw.value) {
+                    document.getElementById('current-password-group').classList.add('has-error');
+                    valid = false;
+                } else {
+                    document.getElementById('current-password-group').classList.remove('has-error');
+                }
+
+                // Check new password strength
+                const pwOk = Object.values(checks).every(c => c.fn(newPw.value));
+                if (!pwOk || newPw.value.length < 8) {
+                    document.getElementById('new-password-group').classList.add('has-error');
+                    valid = false;
+                } else {
+                    document.getElementById('new-password-group').classList.remove('has-error');
+                }
+
+                // Check confirm password
+                if (newPw.value !== confirmPw.value || !confirmPw.value) {
+                    document.getElementById('confirm-password-group').classList.add('has-error');
+                    valid = false;
+                } else {
+                    document.getElementById('confirm-password-group').classList.remove('has-error');
+                }
+            }
+
+            if (!valid) {
+                e.preventDefault();
+                // Scroll to first error
+                const firstError = document.querySelector('.has-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.querySelector('input')?.focus();
+                }
+            }
+        });
+
+        // Clear error on input
+        document.querySelectorAll('.field-group input, .field-group textarea').forEach(el => {
+            el.addEventListener('input', function() {
+                this.closest('.field-group')?.classList.remove('has-error');
+            });
+        });
+    </script>
+</body>
+</html>
