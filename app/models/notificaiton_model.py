@@ -32,3 +32,4 @@ def get_user_notifications(
     self,
     user_id
 ):
+  return self.cursor.fetchall()
