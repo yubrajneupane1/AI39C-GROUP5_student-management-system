@@ -23,7 +23,7 @@ class AuthRoutes:
                 if user:
                     session["user_id"] = user["id"]
                     session["role"] = user["role"]
-                    return redirect(url_for("dashboard"))  # adjust to your route
+                    return redirect(url_for("dashboard"))  
             return render_template("login.html")
 
         @self.bp.route("/logout")
