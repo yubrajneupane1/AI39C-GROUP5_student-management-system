@@ -1,40 +1,129 @@
-from app.models.user_model import UserModel
-from werkzeug.security import check_password_hash
-from flask import session
+from flask import render_template, request, redirect, url_for, session, flash
+from app.models.user_model import User
 
 class AuthController:
 
-    def __init__(self):
-        self.user_model = UserModel()
+    # ─────────────────────────────────────────────
+    # LOGIN
+    # ─────────────────────────────────────────────
 
-    def login(self, username):
-        return self.user_model.get_user_by_username(username)
+    def login(self):
+        if request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            
+            print(f"Login attempt: username={username}")  # Debug
+            
+            # Check if user exists
+            user = User.login(username)
+            
+            if user:
+                print(f"User found: {user.username}, role={user.role}")  # Debug
+                password_valid = user.check_password(password)
+                print(f"Password valid: {password_valid}")  # Debug
+                
+                if password_valid:
+                    session["user_id"] = user.id
+                    session["username"] = user.username
+                    session["role"] = user.role
+                    
+                    print(f"Session set: {session}")  # Debug
+                    
+                    if user.role == "admin":
+                        return redirect(url_for("admin.dashboard"))
+                    elif user.role == "teacher":
+                        return redirect(url_for("teacher.dashboard"))
+                    else:
+                        return redirect(url_for("student.dashboard"))
+                else:
+                    flash("Invalid username or password.", "error")
+                    print("Invalid password")  # Debug
+            else:
+                flash("Invalid username or password.", "error")
+                print(f"User not found: {username}")  # Debug
+            
+            return render_template("login.html")
 
-    def validate_login(self, username, password):
-        user = self.user_model.get_user_by_username(username)
+        return render_template("login.html")
 
-        if not user:
-            return False
+    # ─────────────────────────────────────────────
+    # REGISTER
+    # ─────────────────────────────────────────────
 
-        if not username or not password:
-            return False
+    def register(self):
+        if "user_id" in session:
+            role = session.get("role")
+            if role == "admin":
+                return redirect(url_for("admin.dashboard"))
+            elif role == "teacher":
+                return redirect(url_for("teacher.dashboard"))
+            else:
+                return redirect(url_for("student.dashboard"))
 
-        session["user_id"] = user.id
-        session["role"] = user.role
+        if request.method == "POST":
+            fullname = request.form.get("fullname", "").strip()
+            email = request.form.get("email", "").strip()
+            username = request.form.get("username", "").strip()
+            password = request.form.get("password", "")
+            confirm_password = request.form.get("confirm_password", "")
+            role = request.form.get("role", "student")
 
-        return check_password_hash(
-            user["password"],
-            password
+            if not all([fullname, email, username, password, confirm_password]):
+                flash("All fields are required.", "error")
+                return render_template("register.html")
+
+            if password != confirm_password:
+                flash("Passwords do not match.", "error")
+                return render_template("register.html")
+
+            if len(password) < 8:
+                flash("Password must be at least 8 characters.", "error")
+                return render_template("register.html")
+
+            if role not in ("student", "teacher"):
+                role = "student"
+
+            user = User(
+                name=fullname,
+                email=email,
+                username=username,
+                password=password,
+                role=role,
+            )
+
+            if user.email_exists():
+                flash("An account with this email already exists.", "error")
+                return render_template("register.html")
+
+            if user.username_exists():
+                flash("Username is already taken.", "error")
+                return render_template("register.html")
+
+            user.save()
+            flash("Account created! You can now log in.", "success")
+            return redirect(url_for("auth.login"))
+
+        return render_template("register.html")
+
+    # ─────────────────────────────────────────────
+    # HOME
+    # ─────────────────────────────────────────────
+
+    def home(self):
+        if "user_id" not in session:
+            return redirect(url_for("auth.login"))
+
+        return render_template(
+            "home.html",
+            username=session["username"],
+            role=session["role"],
         )
 
-    def register_user(
-        self,
-        username,
-        password,
-        role
-    ):
-        return self.user_model.create_user(
-            username,
-            password,
-            role
-        )
+    # ─────────────────────────────────────────────
+    # LOGOUT
+    # ─────────────────────────────────────────────
+
+    def logout(self):
+        session.clear()
+        flash("You have been logged out.", "success")
+        return redirect(url_for("auth.login"))
