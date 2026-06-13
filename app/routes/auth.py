@@ -1,37 +1,35 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request
+from flask import Blueprint
+from app.controller.auth import AuthController
+
 
 class AuthRoutes:
 
-    def __init__(self, controller):
+    def __init__(self):
+
         self.bp = Blueprint("auth", __name__)
-        self.controller = controller
-        self._register_routes()
 
-    def _register_routes(self):
+        self.controller = AuthController()
 
-        @self.bp.route("/register", methods=["GET", "POST"])
-        def register():
-            return render_template("register.html")
+    def register(self):
 
-        @self.bp.route("/login", methods=["GET", "POST"])
-        def login():
-            if request.method == "POST":
-                user = self.controller.login(
-                    request.form["username"],
-                    request.form["password"]
-                )
-                if user:
-                    session["user_id"] = user["id"]
-                    session["role"] = user["role"]
-                    return redirect(url_for("dashboard"))  
-            return render_template("login.html")
+        self.bp.route("/", methods=["GET", "POST"])(
+            self.controller.login
+        )
 
-        @self.bp.route("/logout")
-        def logout():
-            session.clear()
-            return redirect(url_for("auth.login"))
+        self.bp.route("/login", methods=["GET", "POST"])(
+            self.controller.login
+        )
 
-    def current_user(self):
-        if not session.get("user_id"):
-            return redirect("/login")
-        return session.get("user_id")
+        self.bp.route("/register", methods=["GET", "POST"])(
+            self.controller.register
+        )
+
+        self.bp.route("/home", methods=["GET", "POST"])(
+            self.controller.home
+        )
+
+        self.bp.route("/logout")(
+            self.controller.logout
+        )
+
+        return self.bp
