@@ -20,6 +20,6 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(attendance_bp)
     app.register_blueprint(notification_bp)
-    
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
     
     return app
