@@ -15,6 +15,7 @@ def create_app():
     app.register_blueprint(auth_routes.register())
     
     app.register_blueprint(student_bp)
+    app.register_blueprint(student_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(teacher_bp)
     app.register_blueprint(profile_bp)
