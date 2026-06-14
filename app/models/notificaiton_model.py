@@ -41,3 +41,5 @@ WHERE id=%s
 
 def get_recent_notifications(self, user_id):
     pass
+
+# Notification cleanup
