@@ -35,3 +35,9 @@ class MarksModel(BaseModel):
     
     def get_class_average(self, subject):
         pass
+    
+    
+    
+    
+# Final validation improvements
+    
