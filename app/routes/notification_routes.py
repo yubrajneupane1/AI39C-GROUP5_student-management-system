@@ -21,3 +21,5 @@ def preferences():
 def mark_read(id):
     pass
 notification_model.mark_as_read(id)
+
+from flask import flash
