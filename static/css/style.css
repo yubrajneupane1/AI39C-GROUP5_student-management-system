@@ -28,3 +28,8 @@ body{
 .notification-filters{
     margin-bottom:15px;
 }
+
+.quick-actions{
+    display:flex;
+    gap:10px;
+}
