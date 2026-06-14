@@ -13,3 +13,8 @@ def attendance():
 @attendance_bp.route("/mark")
 def mark_attendance():
     return render_templates("teacher/mark_attendance.html")
+
+try:
+    pass
+except Exception:
+    pass
