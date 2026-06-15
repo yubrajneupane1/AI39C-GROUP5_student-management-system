@@ -1,10 +1,85 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Resources{% endblock %}
 
 {% block content %}
-<h2>Learning Resources</h2>
-<div class="resources-container"></div>
+<div class="dashboard-header">
+    <h1>📎 Resources</h1>
+    <p>Study materials and resources from your courses</p>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Study Materials -->
+<div class="courses-section">
+    <h2>📚 Study Materials</h2>
+    {% if materials %}
+        {% for m in materials %}
+        <div class="course-box">
+            <div class="course-top">
+                <div>
+                    <h3>{{ m.title }}</h3>
+                    <span class="grade" style="font-size: 12px;">{{ m.course_name }}</span>
+                    {% if m.week_title %}
+                        <span class="grade" style="font-size: 12px; background: #f59e0b; color: white;">Week: {{ m.week_title }}</span>
+                    {% endif %}
+                </div>
+                <div class="action-group">
+                    <span class="grade">{{ m.material_type | capitalize }}</span>
+                </div>
+            </div>
+            {% if m.description %}
+                <p style="margin: 8px 0; color: #666; font-size: 14px;">{{ m.description }}</p>
+            {% endif %}
+            {% if m.file_url %}
+                <a href="{{ m.file_url }}" target="_blank" style="display: inline-block; background: #4f46e5; color: white; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 8px;">📎 View Material</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No study materials available</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Resources -->
+<div class="courses-section">
+    <h2>📎 Shared Resources</h2>
+    {% if resources %}
+        {% for r in resources %}
+        <div class="course-box">
+            <div class="course-top">
+                <div>
+                    <h3>{{ r.title }}</h3>
+                    <span class="grade" style="font-size: 12px;">{{ r.course_name }}</span>
+                    {% if r.teacher_name %}
+                        <span class="grade" style="font-size: 12px; background: #4f46e5; color: white;">By: {{ r.teacher_name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if r.description %}
+                <p style="margin: 8px 0; color: #666; font-size: 14px;">{{ r.description }}</p>
+            {% endif %}
+            {% if r.link %}
+                <a href="{{ r.link }}" target="_blank" style="display: inline-block; background: #4f46e5; color: white; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 8px;">🔗 Open Resource</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No shared resources available</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
-<div class="resource-card">
-</div>
-<div class="resource-grid">
-</div>
