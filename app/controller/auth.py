@@ -110,14 +110,20 @@ class AuthController:
     # ─────────────────────────────────────────────
 
     def home(self):
+        """Redirect to the appropriate dashboard based on user role"""
         if "user_id" not in session:
             return redirect(url_for("auth.login"))
-
-        return render_template(
-            "home.html",
-            username=session["username"],
-            role=session["role"],
-        )
+        
+        role = session.get("role")
+        
+        if role == "admin":
+            return redirect(url_for("admin.dashboard"))
+        elif role == "teacher":
+            return redirect(url_for("teacher.dashboard"))
+        elif role == "student":
+            return redirect(url_for("student.dashboard"))
+        else:
+            return redirect(url_for("auth.login"))
 
     # ─────────────────────────────────────────────
     # LOGOUT

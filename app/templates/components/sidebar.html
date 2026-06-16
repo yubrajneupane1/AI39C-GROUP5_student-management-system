@@ -1,123 +1,156 @@
 <!-- Sidebar Component -->
 <div class="sidebar">
     <div class="logo-section">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        <a href="
+            {% if role == 'admin' %}
+                {{ url_for('admin.dashboard') }}
+            {% elif role == 'teacher' %}
+                {{ url_for('teacher.dashboard') }}
+            {% elif role == 'student' %}
+                {{ url_for('student.dashboard') }}
+            {% else %}
+                {{ url_for('auth.login') }}
+            {% endif %}
+        " class="logo-link">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </a>
     </div>
+
     <ul>
+
         {% if role == 'admin' %}
-            <!-- Admin Menu -->
+
             <li class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
                 <a href="{{ url_for('admin.dashboard') }}">📊 Dashboard</a>
             </li>
+
             <li class="{% if request.endpoint == 'admin.students' %}active{% endif %}">
                 <a href="{{ url_for('admin.students') }}">👨‍🎓 Students</a>
             </li>
+
             <li class="{% if request.endpoint == 'admin.teachers' %}active{% endif %}">
                 <a href="{{ url_for('admin.teachers') }}">👨‍🏫 Teachers</a>
             </li>
+
             <li class="{% if request.endpoint == 'admin.courses' %}active{% endif %}">
                 <a href="{{ url_for('admin.courses') }}">📚 Courses</a>
             </li>
+
             <li class="{% if request.endpoint == 'admin.assign_course' %}active{% endif %}">
                 <a href="{{ url_for('admin.assign_course') }}">📝 Assign Course</a>
             </li>
+
             <li class="{% if request.endpoint == 'attendance.teacher_attendance' %}active{% endif %}">
                 <a href="{{ url_for('attendance.teacher_attendance') }}">✅ Attendance</a>
             </li>
+
             <li class="{% if request.endpoint == 'admin.admin_marks' %}active{% endif %}">
                 <a href="{{ url_for('admin.admin_marks') }}">📈 Marks</a>
             </li>
+
             <li class="{% if request.endpoint == 'admin.admin_fees' %}active{% endif %}">
                 <a href="{{ url_for('admin.admin_fees') }}">💰 Fees</a>
             </li>
+
             <li class="{% if request.endpoint == 'admin.admin_reports' %}active{% endif %}">
                 <a href="{{ url_for('admin.admin_reports') }}">📄 Reports</a>
             </li>
+
             <li class="{% if request.endpoint == 'notification.admin_notifications' %}active{% endif %}">
                 <a href="{{ url_for('notification.admin_notifications') }}">🔔 Notifications</a>
             </li>
+
             
+
         {% elif role == 'teacher' %}
-            <!-- Teacher Menu -->
+
             <li class="{% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
                 <a href="{{ url_for('teacher.dashboard') }}">📊 Dashboard</a>
             </li>
+
             <li class="{% if request.endpoint == 'teacher.students' %}active{% endif %}">
                 <a href="{{ url_for('teacher.students') }}">👨‍🎓 My Students</a>
             </li>
+
             <li class="{% if request.endpoint == 'teacher.courses' %}active{% endif %}">
                 <a href="{{ url_for('teacher.courses') }}">📚 My Courses</a>
             </li>
+
             <li class="{% if request.endpoint == 'teacher.resources' %}active{% endif %}">
                 <a href="{{ url_for('teacher.resources') }}">📎 Resources</a>
             </li>
+
             <li class="{% if request.endpoint == 'attendance.teacher_attendance' %}active{% endif %}">
                 <a href="{{ url_for('attendance.teacher_attendance') }}">✅ Attendance</a>
             </li>
+
             <li class="{% if request.endpoint == 'teacher.teacher_marks' %}active{% endif %}">
                 <a href="{{ url_for('teacher.teacher_marks') }}">📈 Marks</a>
             </li>
+
             <li class="{% if request.endpoint == 'teacher.teacher_reports' %}active{% endif %}">
                 <a href="{{ url_for('teacher.teacher_reports') }}">📄 Reports</a>
             </li>
+
             <li class="{% if request.endpoint == 'notification.view_notifications' %}active{% endif %}">
                 <a href="{{ url_for('notification.view_notifications') }}">🔔 Notifications</a>
             </li>
+
             
+
+        {% else %}
+
             <!-- Student Menu -->
-            {% else %}
-            <ul>
-                <li class="{% if request.endpoint == 'student.dashboard' %}active{% endif %}">
-                    <a href="{{ url_for('student.dashboard') }}">📊 Dashboard</a>
-                </li>
-                <li class="{% if request.endpoint == 'student.courses' %}active{% endif %}">
-                    <a href="{{ url_for('student.courses') }}">📚 My Courses</a>
-                </li>
-                <li class="{% if request.endpoint == 'student.resources' %}active{% endif %}">
-                    <a href="{{ url_for('student.resources') }}">📎 Resources</a>
-                </li>
-                <li class="{% if request.endpoint == 'student.attendance' %}active{% endif %}">
-                    <a href="{{ url_for('student.attendance') }}">✅ Attendance</a>
-                </li>
-                <li class="{% if request.endpoint == 'student.marks' %}active{% endif %}">
-                    <a href="{{ url_for('student.marks') }}">📈 Marks</a>
-                </li>
-                <li class="{% if request.endpoint == 'student.fees' %}active{% endif %}">
-                    <a href="{{ url_for('student.fees') }}">💰 Fees</a>
-                </li>
-                <!-- REPORTS REMOVED - DO NOT INCLUDE -->
-                <li class="{% if request.endpoint == 'notification.view_notifications' %}active{% endif %}">
-                    <a href="{{ url_for('notification.view_notifications') }}">🔔 Notifications</a>
-                </li>
-                <li style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                    <a href="{{ url_for('profile.view_profile') }}">👤 Profile</a>
-                </li>
-                <li>
-                    <a href="{{ url_for('profile.edit_profile') }}">⚙️ Settings</a>
-                </li>
-                <li>
-                    <a href="{{ url_for('auth.logout') }}" style="color: #ef4444;">🚪 Logout</a>
-                </li>
-            </ul>
-            {% endif %}
-        
-        <!-- Profile & Logout - Always visible -->
+            <li class="{% if active_page == 'student_dashboard' or request.endpoint == 'student.dashboard' %}active{% endif %}">
+                <a href="{{ url_for('student.dashboard') }}">📊 Dashboard</a>
+            </li>
+            <li class="{% if active_page == 'student_courses' or request.endpoint == 'student.courses' %}active{% endif %}">
+                <a href="{{ url_for('student.courses') }}">📚 My Courses</a>
+            </li>
+            <li class="{% if active_page == 'student_resources' or request.endpoint == 'student.resources' %}active{% endif %}">
+                <a href="{{ url_for('student.resources') }}">📎 Resources</a>
+            </li>
+            <li class="{% if active_page == 'student_attendance' or request.endpoint == 'student.attendance' %}active{% endif %}">
+                <a href="{{ url_for('student.attendance') }}">✅ Attendance</a>
+            </li>
+            <li class="{% if active_page == 'student_marks' or request.endpoint == 'student.marks' %}active{% endif %}">
+                <a href="{{ url_for('student.marks') }}">📈 Marks</a>
+            </li>
+            <li class="{% if active_page == 'student_fees' or request.endpoint == 'student.fees' %}active{% endif %}">
+                <a href="{{ url_for('student.fees') }}">💰 Fees</a>
+            </li>
+            <li class="{% if active_page == 'student_reports' or request.endpoint == 'student.reports' %}active{% endif %}">
+                <a href="{{ url_for('student.reports') }}">📄 Reports</a>
+            </li>
+            <li class="{% if active_page == 'notifications' or request.endpoint == 'notification.view_notifications' %}active{% endif %}">
+                <a href="{{ url_for('notification.view_notifications') }}">🔔 Notifications</a>
+            </li>
+
+        {% endif %}
+
+        <!-- Always visible items -->
         <li style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
             <a href="{{ url_for('profile.view_profile') }}">👤 Profile</a>
         </li>
+
         <li>
             <a href="{{ url_for('profile.edit_profile') }}">⚙️ Settings</a>
         </li>
+
         <li>
-            <a href="{{ url_for('auth.logout') }}" style="color: #ef4444;">🚪 Logout</a>
+            <a href="{{ url_for('auth.logout') }}" style="color:#ef4444;">🚪 Logout</a>
         </li>
+
     </ul>
-    
+
     <div class="sidebar-footer">
-        <div class="sidebar-avatar">{{ username[:2].upper() if username else 'U' }}</div>
+        <div class="sidebar-avatar">
+            {{ username[:2].upper() if username else 'U' }}
+        </div>
         <div class="sidebar-user-info">
             <strong>{{ username }}</strong>
             <span>{{ role }}</span>
         </div>
     </div>
+
 </div>

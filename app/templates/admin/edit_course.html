@@ -1,84 +1,44 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Course</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "layouts/base.html" %}
 
-    <div class="sidebar">
-        <div class="logo-section">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
-        </div>
-        <ul>
-            <li><a href="/admin/dashboard">Dashboard</a></li>
-            <li><a href="/admin/students">Students</a></li>
-            <li><a href="/admin/teachers">Teachers</a></li>
-            <li class="active"><a href="/admin/courses">Courses</a></li>
-            <li><a href="/admin/assign">Assign Course</a></li>
-            <li><a href="/admin/attendance">Attendance</a></li>
-            <li><a href="/admin/marks">Marks</a></li>
-            <li><a href="/admin/fees">Fees</a></li>
-            <li><a href="/admin/reports">Reports</a></li>
-        </ul>
-    </div>
+{% block content %}
+<div class="dashboard-header">
+    <h1>Edit Course</h1>
+    <p>Update course details</p>
+</div>
 
-    <div class="main-content">
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
-        <div class="topbar">
-            <div>
-                <h3>Welcome, {{ username }}</h3>
-                <p>{{ role }}</p>
-            </div>
-            <a href="{{ url_for('auth.logout') }}">
-                <button class="logout-btn">Switch Account</button>
-            </a>
-        </div>
+<div class="form-section">
+    <form method="POST">
+        <label>Course Name</label>
+        <input type="text" name="name" value="{{ course.name }}" required>
 
-        <div class="dashboard-header">
-            <h1>Edit Course</h1>
-            <p>Update course details</p>
-        </div>
+        <label>Overview</label>
+        <textarea name="description" rows="6">{{ course.description or '' }}</textarea>
 
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for msg in messages %}
-                    <div class="flash-msg">{{ msg }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <label>Assign Teacher</label>
+        <select name="teacher_id">
+            <option value="">-- No Teacher --</option>
+            {% for t in teachers %}
+                <option value="{{ t.id }}" {{ 'selected' if t.id == course.teacher_id else '' }}>
+                    {{ t.fullname }}
+                </option>
+            {% endfor %}
+        </select>
 
-        <div class="form-section">
-            <form method="POST">
+        <label>Capacity (max students)</label>
+        <input type="number" name="capacity" value="{{ course.capacity }}" min="1" max="50">
 
-                <label>Course Name</label>
-                <input type="text" name="name" value="{{ course.name }}" required>
-
-                <label>Overview</label>
-                <textarea name="description" rows="6">{{ course.description or '' }}</textarea>
-
-                <label>Assign Teacher</label>
-                <select name="teacher_id">
-                    <option value="">-- No Teacher --</option>
-                    {% for t in teachers %}
-                        <option value="{{ t.id }}" {{ 'selected' if t.id == course.teacher_id else '' }}>
-                            {{ t.fullname }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <label>Capacity (max students)</label>
-                <input type="number" name="capacity" value="{{ course.capacity }}" min="1" max="50">
-
-                <button type="submit">Save Changes</button>
-                <a href="/admin/courses">
-                    <button type="button" class="logout-btn" style="margin-top: 10px;">Cancel</button>
-                </a>
-
-            </form>
-        </div>
-
-    </div>
-
-</body>
-</html>
+        <button type="submit">Save Changes</button>
+        <a href="/admin/courses">
+            <button type="button" class="logout-btn" style="margin-top: 10px;">Cancel</button>
+        </a>
+    </form>
+</div>
+{% endblock %}
