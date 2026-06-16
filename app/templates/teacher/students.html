@@ -1,0 +1,38 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Students - Teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>My Students</h1>
+    <p>Students enrolled in your courses</p>
+</div>
+
+<div class="courses-section">
+    <h2>Student List {% if students %}<span style="font-size: 13px; font-weight: 500; color: #64748b; margin-left: 8px;">({{ students | length }} total)</span>{% endif %}</h2>
+    
+    {% if students %}
+        {% for s in students %}
+        <div class="course-box">
+            <div class="student-row">
+                <div class="student-avatar">{{ s.fullname[:2] }}</div>
+                <div class="student-info">
+                    <h3>{{ s.fullname }}</h3>
+                    <p>{{ s.email }} &nbsp;|&nbsp; @{{ s.username }}</p>
+                </div>
+                <div style="margin-left:auto;">
+                    <span class="grade">Student</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No students assigned yet</h3>
+            </div>
+            <p class="record-date">Students will appear here once they're enrolled in your courses.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

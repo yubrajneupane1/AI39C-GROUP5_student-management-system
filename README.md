@@ -59,7 +59,7 @@ Database: MySQL 5.7+ / 8.0+
 ### Steps
 ```bash
 # 1. Clone/Extract project
-cd Acadlytics_final
+cd Acadlytics_Project
 
 # 2. Create virtual environment
 python -m venv venv

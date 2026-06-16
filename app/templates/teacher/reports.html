@@ -1,0 +1,62 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Reports - Teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Reports</h1>
+    <p>Performance overview of your courses</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="cards">
+    <div class="card">
+        <h4>Total Students</h4>
+        <h2>{{ stats.total_students or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Total Courses</h4>
+        <h2>{{ stats.total_courses or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Overall Marks</h4>
+        <h2>{{ stats.overall_avg_marks or 0 }}%</h2>
+    </div>
+    <div class="card">
+        <h4>Overall Attendance</h4>
+        <h2>{{ stats.overall_attendance or 0 }}%</h2>
+    </div>
+</div>
+
+<!-- Course Performance -->
+<div class="courses-section">
+    <h2>Course Performance</h2>
+    {% if course_performance %}
+        {% for c in course_performance %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ c.name }}</h3>
+                <div class="action-group">
+                    <span class="grade">{{ c.avg_marks or 0 }}%</span>
+                    <span class="grade">{{ c.completion_rate or 0 }}% Complete</span>
+                </div>
+            </div>
+            <p class="record-date">
+                Students: {{ c.total_students or 0 }} | 
+                Attendance: {{ c.avg_attendance or 0 }}% | 
+                Tasks: {{ c.total_submissions or 0 }}/{{ c.total_tasks or 0 }} submitted
+            </p>
+            <div class="progress-bar">
+                <div class="progress" style="width: {{ c.completion_rate or 0 }}%; background: {% if (c.completion_rate or 0) >= 70 %}#16a34a{% elif (c.completion_rate or 0) >= 40 %}#f59e0b{% else %}#dc2626{% endif %};"></div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No course data available</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

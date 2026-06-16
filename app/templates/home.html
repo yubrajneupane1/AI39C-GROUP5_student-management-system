@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Acadlytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </div>
+        <!-- In the student dashboard sidebar or navigation -->
+        <ul>
+            <li><a href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('student.courses') }}">My Courses</a></li>
+            <li><a href="{{ url_for('student.resources') }}">Resources</a></li>
+            <li><a href="{{ url_for('student.attendance') }}">Attendance</a></li>
+            <li><a href="{{ url_for('student.marks') }}">Marks</a></li>
+            <li><a href="{{ url_for('student.fees') }}">Fees</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+
+        <div class="topbar">
+            <div>
+                <h3>Welcome, {{ username }}</h3>
+                <p>{{ role }}</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}">
+                <button class="logout-btn">Switch Account</button>
+            </a>
+        </div>
+
+        <div class="dashboard-header">
+            <h1>Student Dashboard</h1>
+            <p>Track your academic progress</p>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <h4>Attendance</h4>
+                <h2>{{ att_percent }}%</h2>
+            </div>
+            <div class="card">
+                <h4>Average Marks</h4>
+                <h2>{{ avg_marks }}%</h2>
+            </div>
+            <div class="card">
+                <h4>Fee Status</h4>
+                <h2>{{ fee_status }}</h2>
+            </div>
+            <div class="card">
+                <h4>Courses Enrolled</h4>
+                <h2>{{ total_courses }}</h2>
+            </div>
+        </div>
+
+        <div class="courses-section">
+            <h2>My Courses</h2>
+            {% if courses %}
+                {% for c in courses %}
+                <div class="course-box">
+                    <div class="course-top">
+                        <h3>{{ c.name }}</h3>
+                        <span class="grade">Ongoing</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 0%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="course-box">
+                    <div class="course-top">
+                        <h3>No courses enrolled yet</h3>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</body>
+</html>

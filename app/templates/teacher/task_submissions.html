@@ -1,0 +1,88 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Submissions - {{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>{{ task.title }}</h1>
+    <p>Review and grade student submissions</p>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb; display: flex; gap: 20px; flex-wrap: wrap;">
+    {% if task.due_date %}
+        <span><strong>Due:</strong> {{ task.due_date.strftime('%d %b %Y, %I:%M %p') }}</span>
+    {% endif %}
+    {% if task.time_limit_minutes %}
+        <span><strong>Time Limit:</strong> {{ task.time_limit_minutes }} min</span>
+    {% endif %}
+    <span><strong>Submission Type:</strong> {{ task.submission_type }}</span>
+    <span><strong>Submissions:</strong> {{ submissions | length }}</span>
+</div>
+
+<div class="courses-section">
+    <h2>All Submissions</h2>
+    
+    {% if submissions %}
+        {% for sub in submissions %}
+        <div class="course-box" style="{% if sub.status == 'graded' %}border-left: 4px solid #16a34a;{% elif sub.is_late %}border-left: 4px solid #dc2626;{% endif %}">
+            <div class="course-top">
+                <div>
+                    <h3>{{ sub.student_name or sub.fullname }}</h3>
+                    <p style="font-size: 13px; color: #64748b;">@{{ sub.student_username or sub.username }}</p>
+                    {% if sub.text_answer %}
+                        <div style="background: #f1f5f9; padding: 10px; border-radius: 4px; margin-top: 8px;">
+                            <p style="font-size: 14px; color: #1e293b;">{{ sub.text_answer }}</p>
+                        </div>
+                    {% endif %}
+                    {% if sub.file_url %}
+                        <a href="{{ sub.file_url }}" target="_blank" class="btn-view" style="padding: 4px 12px; font-size: 12px; text-decoration: none; display: inline-block; margin-top: 8px;">📎 View File</a>
+                    {% endif %}
+                </div>
+                <div style="text-align: right;">
+                    <span class="grade" style="font-size: 12px;">{{ sub.submitted_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                    {% if sub.is_late %}
+                        <span class="grade" style="background: #dc2626; color: white;">Late</span>
+                    {% endif %}
+                    {% if sub.status == 'graded' %}
+                        <span class="grade" style="background: #16a34a; color: white;">Graded: {{ sub.grade }}</span>
+                    {% else %}
+                        <span class="grade" style="background: #f59e0b; color: white;">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Grade Form -->
+            <form method="POST" action="/teacher/submission/{{ sub.id }}/grade">
+                <input type="hidden" name="task_id" value="{{ task.id }}">
+                <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                    <input type="number" name="grade" placeholder="Score" min="0" value="{{ sub.grade if sub.grade is not none else '' }}" style="width: 100px; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <input type="text" name="feedback" placeholder="Feedback..." value="{{ sub.feedback or '' }}" style="flex: 1; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <button type="submit" class="edit-btn" style="padding: 6px 16px;">
+                        {% if sub.status == 'graded' %}Update{% else %}Grade{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No submissions yet</h3>
+            </div>
+            <p class="record-date">Students haven't submitted this task yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="/teacher/course/{{ task.course_id }}" style="color: #4f46e5; text-decoration: none; font-weight: 600;">← Back to Course</a>
+</div>
+{% endblock %}
