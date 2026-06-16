@@ -1,0 +1,224 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<h2>Notification Management</h2>
+{% endblock %}
+<div class="notification-container">
+</div>
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<h2>Notifications</h2>
+{% endblock %}
+<div class="notification-filters">
+</div>
+{% extends "layouts/base.html" %}
+
+{% block title %}Admin - Notifications{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>🔔 Notification Management</h1>
+    <p>Create custom notifications and send to all users</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-msg {% if category == 'error' %}flash-error{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Statistics -->
+<div class="cards">
+    <div class="card">
+        <h4>Total Notifications</h4>
+        <h2>{{ summary.total or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Unread</h4>
+        <h2 style="color: #4f46e5;">{{ summary.unread or 0 }}</h2>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+    <button onclick="showTab('send')" class="tab-btn active" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #4f46e5; border-bottom: 2px solid #4f46e5; margin-bottom: -10px;">📤 Send Notification</button>
+    <button onclick="showTab('history')" class="tab-btn" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b;">📋 History</button>
+</div>
+
+<!-- Tab 1: Send Notification -->
+<div id="tab-send" class="tab-content">
+    <div style="background: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <h3>📤 Create Custom Notification</h3>
+        
+        <!-- Send to All - Quick Action -->
+        <div style="background: #dbeafe; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #93c5fd;">
+            <h4 style="color: #1e40af;">📢 Send to All Users</h4>
+            <p style="font-size: 13px; color: #1e40af; margin-bottom: 12px;">Quickly send a notification to ALL active users.</p>
+            <form method="POST" action="{{ url_for('notification.admin_send_to_all') }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <input type="text" name="title" placeholder="Title" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    </div>
+                    <div>
+                        <select name="notification_type" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                            <option value="system">📢 System</option>
+                            <option value="attendance">✅ Attendance</option>
+                            <option value="fee">💰 Fee</option>
+                            <option value="grade">📊 Grade</option>
+                            <option value="task">📝 Task</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <textarea name="message" rows="3" placeholder="Enter your notification message..." required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;"></textarea>
+                </div>
+                <div style="margin-top: 12px;">
+                    <input type="text" name="link" placeholder="Optional: /student/dashboard or https://..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                <div style="margin-top: 12px;">
+                    <button type="submit" style="background: #4f46e5; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; font-size: 16px;">
+                        📢 Send to ALL Users
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Send to Specific Groups -->
+        <h4 style="margin-top: 16px;">🎯 Send to Specific Groups</h4>
+        <form method="POST" action="{{ url_for('notification.admin_send_selected') }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Title *</label>
+                    <input type="text" name="title" placeholder="Notification title" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Recipient *</label>
+                    <select name="recipient_type" id="recipientType" onchange="toggleUserSelect()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        <option value="all">📢 All Users</option>
+                        <option value="teachers">👨‍🏫 Teachers Only</option>
+                        <option value="students">👨‍🎓 Students Only</option>
+                        <option value="specific">👤 Specific User</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="userSelectDiv" style="display: none; margin-top: 12px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Select User</label>
+                <select name="user_id" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <option value="">-- Select User --</option>
+                    {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.fullname }} ({{ u.role }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="margin-top: 12px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Message *</label>
+                <textarea name="message" rows="3" placeholder="Enter your notification message..." required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;"></textarea>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Type</label>
+                    <select name="notification_type" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        <option value="system">📢 System</option>
+                        <option value="attendance">✅ Attendance</option>
+                        <option value="fee">💰 Fee</option>
+                        <option value="grade">📊 Grade</option>
+                        <option value="task">📝 Task</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Link (optional)</label>
+                    <input type="text" name="link" placeholder="/student/dashboard" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+            </div>
+            
+            <div style="margin-top: 16px;">
+                <button type="submit" style="background: #4f46e5; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    📤 Send to Selected
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tab 2: Notification History -->
+<div id="tab-history" class="tab-content" style="display: none;">
+    <div class="courses-section">
+        <h2>📋 Notification History</h2>
+        {% if notifications %}
+            {% for n in notifications %}
+            <div class="course-box" style="{% if not n.is_read %}border-left: 4px solid #4f46e5;{% endif %}">
+                <div class="course-top">
+                    <div>
+                        <h3>{{ n.title }}</h3>
+                        <p style="margin: 4px 0; color: #475569; font-size: 14px;">{{ n.message }}</p>
+                        <p class="record-date" style="font-size: 12px;">
+                            <strong>To:</strong> {{ n.user_name }} ({{ n.user_role }}) |
+                            {{ n.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            {% if not n.is_read %}
+                                | <span style="color: #4f46e5; font-weight: 600;">Unread</span>
+                            {% else %}
+                                | <span style="color: #10b981;">Read</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="action-group">
+                        <form method="POST" action="{{ url_for('notification.admin_delete_notification', notification_id=n.id) }}" style="display: inline;" onsubmit="return confirm('Delete this notification?');">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="course-box">
+                <div class="course-top">
+                    <h3>No notifications sent yet</h3>
+                </div>
+                <p class="record-date">Send your first notification using the form above.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(function(tab) {
+        tab.style.display = 'none';
+    });
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.style.color = '#64748b';
+        btn.style.borderBottom = 'none';
+    });
+    event.target.style.color = '#4f46e5';
+    event.target.style.borderBottom = '2px solid #4f46e5';
+}
+
+function toggleUserSelect() {
+    var select = document.getElementById('recipientType');
+    var div = document.getElementById('userSelectDiv');
+    div.style.display = select.value === 'specific' ? 'block' : 'none';
+}
+</script>
+
+<style>
+    .btn-primary {
+        transition: background 0.2s;
+    }
+    .btn-primary:hover {
+        background: #4338ca !important;
+    }
+    .flash-error {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+</style>
+{% endblock %}

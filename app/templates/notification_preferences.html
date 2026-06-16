@@ -1,0 +1,124 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<h2>Notification Preferences</h2>
+{% endblock %}
+{% extends "layouts/base.html" %}
+
+{% block title %}Notification Preferences{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>⚙️ Notification Preferences</h1>
+    <p>Manage how you receive notifications</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-msg {% if category == 'error' %}flash-error{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div style="max-width: 600px;">
+    <form method="POST" action="{{ url_for('notification.notification_preferences') }}">
+        <div class="courses-section">
+            <h2>Notification Types</h2>
+            
+            <div style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="font-size: 14px;">✅ Attendance Alerts</h4>
+                        <p style="font-size: 12px; color: #64748b;">Get notified when attendance is marked</p>
+                    </div>
+                    <label style="position: relative; display: inline-block; width: 48px; height: 24px;">
+                        <input type="checkbox" name="attendance_alerts" {% if preferences.attendance_alerts %}checked{% endif %} style="opacity: 0; width: 0; height: 0;">
+                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .4s; border-radius: 24px; {% if preferences.attendance_alerts %}background: #4f46e5;{% endif %}">
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; {% if preferences.attendance_alerts %}transform: translateX(24px);{% endif %}"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="font-size: 14px;">💰 Fee Alerts</h4>
+                        <p style="font-size: 12px; color: #64748b;">Get notified about fee payments and dues</p>
+                    </div>
+                    <label style="position: relative; display: inline-block; width: 48px; height: 24px;">
+                        <input type="checkbox" name="fee_alerts" {% if preferences.fee_alerts %}checked{% endif %} style="opacity: 0; width: 0; height: 0;">
+                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .4s; border-radius: 24px; {% if preferences.fee_alerts %}background: #4f46e5;{% endif %}">
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; {% if preferences.fee_alerts %}transform: translateX(24px);{% endif %}"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="font-size: 14px;">📊 Grade Alerts</h4>
+                        <p style="font-size: 12px; color: #64748b;">Get notified when grades are published</p>
+                    </div>
+                    <label style="position: relative; display: inline-block; width: 48px; height: 24px;">
+                        <input type="checkbox" name="grade_alerts" {% if preferences.grade_alerts %}checked{% endif %} style="opacity: 0; width: 0; height: 0;">
+                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .4s; border-radius: 24px; {% if preferences.grade_alerts %}background: #4f46e5;{% endif %}">
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; {% if preferences.grade_alerts %}transform: translateX(24px);{% endif %}"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="font-size: 14px;">📝 Task Alerts</h4>
+                        <p style="font-size: 12px; color: #64748b;">Get notified about new tasks and assignments</p>
+                    </div>
+                    <label style="position: relative; display: inline-block; width: 48px; height: 24px;">
+                        <input type="checkbox" name="task_alerts" {% if preferences.task_alerts %}checked{% endif %} style="opacity: 0; width: 0; height: 0;">
+                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .4s; border-radius: 24px; {% if preferences.task_alerts %}background: #4f46e5;{% endif %}">
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; {% if preferences.task_alerts %}transform: translateX(24px);{% endif %}"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <div style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="font-size: 14px;">📢 System Alerts</h4>
+                        <p style="font-size: 12px; color: #64748b;">Get notified about system announcements</p>
+                    </div>
+                    <label style="position: relative; display: inline-block; width: 48px; height: 24px;">
+                        <input type="checkbox" name="system_alerts" {% if preferences.system_alerts %}checked{% endif %} style="opacity: 0; width: 0; height: 0;">
+                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .4s; border-radius: 24px; {% if preferences.system_alerts %}background: #4f46e5;{% endif %}">
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; {% if preferences.system_alerts %}transform: translateX(24px);{% endif %}"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="courses-section" style="margin-top: 16px;">
+            <h2>Attendance Threshold</h2>
+            <div style="padding: 12px 0;">
+                <label style="display: block; font-weight: 500; margin-bottom: 4px; font-size: 14px;">
+                    Alert when attendance falls below (%)
+                </label>
+                <input type="number" name="attendance_threshold" value="{{ preferences.attendance_threshold or 75 }}" min="0" max="100" style="width: 120px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <p style="font-size: 12px; color: #64748b; margin-top: 4px;">You'll receive alerts when your attendance drops below this percentage</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button type="submit" style="background: #4f46e5; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                💾 Save Preferences
+            </button>
+            <a href="{{ url_for('notification.view_notifications') }}" style="margin-left: 12px; color: #64748b; text-decoration: none;">← Back to Notifications</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
