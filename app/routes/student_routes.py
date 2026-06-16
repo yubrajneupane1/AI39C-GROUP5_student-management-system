@@ -396,3 +396,100 @@ def fees():
         paid=paid,
         unpaid=unpaid,
     )
+
+# ============================================
+# STUDENT - REPORTS
+# ============================================
+
+@student_bp.route("/student/reports")
+def reports():
+    if student_required():
+        return redirect(url_for("auth.login"))
+    
+    db = Database()
+    student_id = session["user_id"]
+    
+    # Get student info
+    student = db.fetchone("SELECT * FROM users WHERE id=%s", (student_id,))
+    
+    # Overall Statistics
+    stats = db.fetchone("""
+        SELECT 
+            (SELECT COUNT(*) FROM enrollments WHERE student_id = %s) as enrolled_courses,
+            (SELECT ROUND(AVG(score / total * 100), 1) FROM marks WHERE student_id = %s) as overall_avg_marks,
+            (SELECT ROUND(AVG(CASE WHEN status = 'present' THEN 1 ELSE 0 END) * 100, 2) 
+             FROM attendance WHERE student_id = %s) as overall_attendance,
+            (SELECT COUNT(*) FROM tasks t 
+             JOIN enrollments e ON t.course_id = e.course_id 
+             WHERE e.student_id = %s) as total_tasks,
+            (SELECT COUNT(*) FROM task_submissions WHERE student_id = %s) as completed_tasks
+    """, (student_id, student_id, student_id, student_id, student_id))
+    
+    # Calculate task completion rate
+    if stats and stats['total_tasks'] > 0:
+        stats['task_completion_rate'] = round((stats['completed_tasks'] / stats['total_tasks']) * 100, 2)
+    else:
+        stats['task_completion_rate'] = 0
+    
+    # Course-wise performance
+    course_performance = db.fetch("""
+        SELECT 
+            c.id,
+            c.name,
+            c.code,
+            c.credits,
+            ROUND(AVG(m.score / m.total * 100), 1) as avg_marks,
+            (SELECT grade FROM grade_scale 
+             WHERE ROUND(AVG(m.score / m.total * 100), 1) BETWEEN min_score AND max_score 
+             LIMIT 1) as grade,
+            (SELECT gpa FROM grade_scale 
+             WHERE ROUND(AVG(m.score / m.total * 100), 1) BETWEEN min_score AND max_score 
+             LIMIT 1) as gpa,
+            ROUND(AVG(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) * 100, 2) as attendance_percentage,
+            COUNT(DISTINCT a.id) as total_attendance,
+            SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_attendance,
+            (SELECT COUNT(*) FROM tasks t WHERE t.course_id = c.id) as course_tasks,
+            (SELECT COUNT(*) FROM task_submissions ts 
+             WHERE ts.task_id IN (SELECT id FROM tasks WHERE course_id = c.id) 
+             AND ts.student_id = %s) as completed_course_tasks
+        FROM courses c
+        JOIN enrollments e ON c.id = e.course_id
+        LEFT JOIN marks m ON c.id = m.course_id AND m.student_id = %s
+        LEFT JOIN attendance a ON c.id = a.course_id AND a.student_id = %s
+        WHERE e.student_id = %s
+        GROUP BY c.id, c.name, c.code, c.credits
+        ORDER BY avg_marks DESC
+    """, (student_id, student_id, student_id, student_id))
+    
+    # Calculate GPA
+    total_credits = 0
+    total_grade_points = 0
+    for course in course_performance:
+        if course.get('gpa') and course.get('credits'):
+            total_grade_points += course['gpa'] * course['credits']
+            total_credits += course['credits']
+    
+    gpa = round(total_grade_points / total_credits, 2) if total_credits > 0 else 0
+    
+    # Fee summary
+    fee_summary = db.fetchone("""
+        SELECT 
+            SUM(amount) as total_fees,
+            SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as paid_fees,
+            SUM(CASE WHEN status IN ('unpaid', 'partial') THEN amount ELSE 0 END) as pending_fees
+        FROM fee_records
+        WHERE student_id = %s
+    """, (student_id,))
+    
+    db.close()
+    
+    return render_template(
+        "student/reports.html",
+        username=session["username"],
+        role=session["role"],
+        student=student,
+        stats=stats,
+        course_performance=course_performance,
+        gpa=gpa,
+        fee_summary=fee_summary
+    )

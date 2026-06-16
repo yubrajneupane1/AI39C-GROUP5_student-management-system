@@ -3,7 +3,6 @@
 {% block title %}Notifications - Acadlytics{% endblock %}
 
 {% block content %}
-
 <div class="dashboard-header">
     <h1>🔔 Notifications</h1>
     <p>Your latest notifications and alerts</p>
@@ -12,19 +11,14 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
         <span class="grade">{{ unread_count }} unread</span>
-        <span class="grade" style="background: #64748b; color: white;">
-            {{ notifications|length }} total
-        </span>
+        <span class="grade" style="background: #64748b; color: white;">{{ notifications|length }} total</span>
     </div>
-
     <div>
+        <button onclick="markAllRead()" class="edit-btn" style="background: #4f46e5; color: white; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer;">
+            ✅ Mark All Read
+        </button>
         <a href="{{ url_for('notification.notification_preferences') }}" class="edit-btn">
             ⚙️ Preferences
-        </a>
-        <a href="{{ url_for('notification.view_notifications') }}"
-           class="edit-btn"
-           style="background: #4f46e5; color: white;">
-            🔄 Refresh
         </a>
     </div>
 </div>
@@ -32,21 +26,18 @@
 <div class="courses-section">
     {% if notifications %}
         {% for n in notifications %}
-        <div class="course-box" style="{% if not n.is_read %}border-left: 4px solid #4f46e5; background: #f8fafc;{% endif %}">
+        <div class="course-box notification-item {% if not n.is_read %}unread{% endif %}" 
+             style="{% if not n.is_read %}border-left: 4px solid #4f46e5; background: #f8fafc;{% endif %}"
+             data-id="{{ n.id }}">
             <div class="course-top">
-                <div>
+                <div style="flex: 1;">
                     <h3>{{ n.title }}</h3>
                     <p style="margin: 4px 0; color: #475569;">{{ n.message }}</p>
-
                     <p class="record-date" style="font-size: 12px;">
                         {{ n.created_at.strftime('%B %d, %Y at %I:%M %p') }}
                         {% if n.type %}
-                            | Type:
-                            <span class="grade" style="font-size: 10px;">
-                                {{ n.type | capitalize }}
-                            </span>
+                            | Type: <span class="grade" style="font-size: 10px;">{{ n.type | capitalize }}</span>
                         {% endif %}
-
                         {% if not n.is_read %}
                             | <span style="color: #4f46e5; font-weight: 600;">🔵 New</span>
                         {% else %}
@@ -54,14 +45,14 @@
                         {% endif %}
                     </p>
                 </div>
-
                 <div class="action-group">
+                    {% if not n.is_read %}
+                        <button onclick="markRead({{ n.id }})" class="edit-btn" style="padding: 4px 12px; font-size: 12px;">
+                            Mark Read
+                        </button>
+                    {% endif %}
                     {% if n.link %}
-                        <a href="{{ n.link }}"
-                           class="btn-view"
-                           style="padding: 4px 12px; font-size: 12px; text-decoration: none;">
-                            View
-                        </a>
+                        <a href="{{ n.link }}" class="btn-view" style="padding: 4px 12px; font-size: 12px; text-decoration: none;">View</a>
                     {% endif %}
                 </div>
             </div>
@@ -77,4 +68,120 @@
     {% endif %}
 </div>
 
+<script>
+// Mark a single notification as read
+function markRead(notificationId) {
+    fetch('/notifications/mark-read/' + notificationId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Find the notification item
+            const items = document.querySelectorAll('.notification-item');
+            items.forEach(item => {
+                if (item.dataset.id == notificationId) {
+                    // Remove unread styling
+                    item.classList.remove('unread');
+                    item.style.borderLeft = 'none';
+                    item.style.background = 'white';
+                    
+                    // Remove the "Mark Read" button
+                    const markBtn = item.querySelector('.edit-btn');
+                    if (markBtn) markBtn.remove();
+                    
+                    // Update the status text
+                    const statusSpan = item.querySelector('.record-date span:last-child');
+                    if (statusSpan) {
+                        statusSpan.textContent = '✅ Read';
+                        statusSpan.style.color = '#10b981';
+                    }
+                }
+            });
+            
+            // Update the unread count
+            updateUnreadCount();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Mark all notifications as read
+function markAllRead() {
+    if (confirm('Mark all notifications as read?')) {
+        fetch('/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update all notification items
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.classList.remove('unread');
+                    item.style.borderLeft = 'none';
+                    item.style.background = 'white';
+                    
+                    // Remove all "Mark Read" buttons
+                    const markBtn = item.querySelector('.edit-btn');
+                    if (markBtn) markBtn.remove();
+                    
+                    // Update status text
+                    const statusSpan = item.querySelector('.record-date span:last-child');
+                    if (statusSpan) {
+                        statusSpan.textContent = '✅ Read';
+                        statusSpan.style.color = '#10b981';
+                    }
+                });
+                
+                // Update the unread count
+                updateUnreadCount();
+                
+                // Remove the "Mark All Read" button if no unread
+                const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+                if (unreadCount === 0) {
+                    const markAllBtn = document.querySelector('button[onclick="markAllRead()"]');
+                    if (markAllBtn) markAllBtn.style.display = 'none';
+                }
+                
+                alert('All notifications marked as read!');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
+// Update the unread count badge
+function updateUnreadCount() {
+    const unreadItems = document.querySelectorAll('.notification-item.unread');
+    const unreadCount = unreadItems.length;
+    
+    // Update the count display
+    const countSpan = document.querySelector('.grade:first-child');
+    if (countSpan) {
+        countSpan.textContent = unreadCount + ' unread';
+    }
+    
+    // Update the topbar badge
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+        if (unreadCount > 0) {
+            badge.style.display = 'block';
+            badge.textContent = unreadCount;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// Update badge on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateUnreadCount();
+});
+</script>
 {% endblock %}
