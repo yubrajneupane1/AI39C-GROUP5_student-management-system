@@ -1,74 +1,49 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Acadlytics Teachers</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="sidebar">
-        <div class="logo-section">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
-        </div>
-        <ul>
-            <li><a href="/admin/dashboard">Dashboard</a></li>
-            <li><a href="/admin/students">Students</a></li>
-            <li class="active"><a href="/admin/teachers">Teachers</a></li>
-            <li><a href="/admin/courses">Courses</a></li>
-            <li><a href="/admin/assign">Assign Course</a></li>
-            <li><a href="/admin/attendance">Attendance</a></li>
-            <li><a href="/admin/marks">Marks</a></li>
-            <li><a href="/admin/fees">Fees</a></li>
-            <li><a href="/admin/reports">Reports</a></li>
-        </ul>
-    </div>
-    <div class="main-content">
-        <div class="topbar">
-            <div><h3>Welcome, {{ username }}</h3><p>{{ role }}</p></div>
-            <a href="{{ url_for('auth.logout') }}"><button class="logout-btn">Switch Account</button></a>
-        </div>
-        <div class="dashboard-header">
-            <h1>Teachers</h1>
-            <p>All registered teachers</p>
-        </div>
+{% extends "layouts/base.html" %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-msg">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+{% block content %}
+<div class="dashboard-header">
+    <h1>Teachers</h1>
+    <p>All registered teachers</p>
+</div>
 
-        <div class="topbar-action">
-            <a href="/admin/users/create"><button class="add-btn">+ Create User</button></a>
-        </div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-msg">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
-        <div class="courses-section">
-            <h2>Teacher List</h2>
-            {% if teachers %}
-                {% for t in teachers %}
-                <div class="course-box">
-                    <div class="course-top">
-                        <h3>{{ t.fullname }}</h3>
-                        <div class="action-group">
-                            <span class="grade">Teacher</span>
-                            <a href="/admin/teachers/edit/{{ t.id }}">
-                                <button class="edit-btn">Edit</button>
-                            </a>
-                            <form method="POST" action="/admin/teachers/delete/{{ t.id }}" style="display:inline;" onsubmit="return confirm('Delete {{ t.fullname }}?');">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
-                        </div>
-                    </div>
-                    <p class="record-date">{{ t.email }} &nbsp;|&nbsp; @{{ t.username }}</p>
+<div class="topbar-action">
+    <a href="/admin/users/create"><button class="add-btn">+ Create User</button></a>
+</div>
+
+<div class="courses-section">
+    <h2>Teacher List</h2>
+    {% if teachers %}
+        {% for t in teachers %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ t.fullname }}</h3>
+                <div class="action-group">
+                    <span class="grade">Teacher</span>
+                    <a href="/admin/teachers/edit/{{ t.id }}">
+                        <button class="edit-btn">Edit</button>
+                    </a>
+                    <form method="POST" action="/admin/teachers/delete/{{ t.id }}" style="display:inline;" onsubmit="return confirm('Delete {{ t.fullname }}?');">
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="course-box">
-                    <div class="course-top"><h3>No teachers registered yet</h3></div>
-                </div>
-            {% endif %}
+            </div>
+            <p class="record-date">{{ t.email }} &nbsp;|&nbsp; @{{ t.username }}</p>
         </div>
-    </div>
-</body>
-</html>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No teachers registered yet</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

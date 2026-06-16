@@ -1,8 +1,19 @@
 <!-- Sidebar Component -->
 <div class="sidebar">
-
     <div class="logo-section">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        <a href="
+            {% if role == 'admin' %}
+                {{ url_for('admin.dashboard') }}
+            {% elif role == 'teacher' %}
+                {{ url_for('teacher.dashboard') }}
+            {% elif role == 'student' %}
+                {{ url_for('student.dashboard') }}
+            {% else %}
+                {{ url_for('auth.login') }}
+            {% endif %}
+        " class="logo-link">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </a>
     </div>
 
     <ul>
@@ -49,7 +60,7 @@
                 <a href="{{ url_for('notification.admin_notifications') }}">🔔 Notifications</a>
             </li>
 
-            <!-- FIX: removed duplicates from admin section -->
+            
 
         {% elif role == 'teacher' %}
 
@@ -85,48 +96,34 @@
                 <a href="{{ url_for('notification.view_notifications') }}">🔔 Notifications</a>
             </li>
 
-            <!-- FIX: removed duplicates from teacher section -->
+            
 
         {% else %}
 
-            <li class="{% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+            <!-- Student Menu -->
+            <li class="{% if active_page == 'student_dashboard' or request.endpoint == 'student.dashboard' %}active{% endif %}">
                 <a href="{{ url_for('student.dashboard') }}">📊 Dashboard</a>
             </li>
-
-            <li class="{% if request.endpoint == 'student.courses' %}active{% endif %}">
+            <li class="{% if active_page == 'student_courses' or request.endpoint == 'student.courses' %}active{% endif %}">
                 <a href="{{ url_for('student.courses') }}">📚 My Courses</a>
             </li>
-
-            <li class="{% if request.endpoint == 'student.resources' %}active{% endif %}">
+            <li class="{% if active_page == 'student_resources' or request.endpoint == 'student.resources' %}active{% endif %}">
                 <a href="{{ url_for('student.resources') }}">📎 Resources</a>
             </li>
-
-            <li class="{% if request.endpoint == 'student.attendance' %}active{% endif %}">
+            <li class="{% if active_page == 'student_attendance' or request.endpoint == 'student.attendance' %}active{% endif %}">
                 <a href="{{ url_for('student.attendance') }}">✅ Attendance</a>
             </li>
-
-            <li class="{% if request.endpoint == 'student.marks' %}active{% endif %}">
+            <li class="{% if active_page == 'student_marks' or request.endpoint == 'student.marks' %}active{% endif %}">
                 <a href="{{ url_for('student.marks') }}">📈 Marks</a>
             </li>
-
-            <li class="{% if request.endpoint == 'student.fees' %}active{% endif %}">
+            <li class="{% if active_page == 'student_fees' or request.endpoint == 'student.fees' %}active{% endif %}">
                 <a href="{{ url_for('student.fees') }}">💰 Fees</a>
             </li>
-
-            <li class="{% if request.endpoint == 'notification.view_notifications' %}active{% endif %}">
+            <li class="{% if active_page == 'student_reports' or request.endpoint == 'student.reports' %}active{% endif %}">
+                <a href="{{ url_for('student.reports') }}">📄 Reports</a>
+            </li>
+            <li class="{% if active_page == 'notifications' or request.endpoint == 'notification.view_notifications' %}active{% endif %}">
                 <a href="{{ url_for('notification.view_notifications') }}">🔔 Notifications</a>
-            </li>
-
-            <li>
-                <a href="{{ url_for('profile.view_profile') }}">👤 Profile</a>
-            </li>
-
-            <li>
-                <a href="{{ url_for('profile.edit_profile') }}">⚙️ Settings</a>
-            </li>
-
-            <li>
-                <a href="{{ url_for('auth.logout') }}" style="color:#ef4444;">🚪 Logout</a>
             </li>
 
         {% endif %}

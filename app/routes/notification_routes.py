@@ -8,6 +8,7 @@ notification_bp = Blueprint("notification", __name__)
 def admin_required():
     return "role" not in session or session["role"] != "admin"
 
+
 # ============================================
 # VIEW NOTIFICATIONS (All Users)
 # ============================================
@@ -40,6 +41,7 @@ def view_notifications():
         unread_count=unread_count["count"] if unread_count else 0
     )
 
+
 # ============================================
 # GET UNREAD COUNT (AJAX)
 # ============================================
@@ -58,8 +60,65 @@ def get_unread_count():
     
     return jsonify({"unread": result["count"] if result else 0})
 
+
 # ============================================
-# USER NOTIFICATION PREFERENCES
+# MARK SINGLE NOTIFICATION AS READ
+# ============================================
+
+@notification_bp.route("/notifications/mark-read/<int:notification_id>", methods=["POST"])
+def mark_notification_read(notification_id):
+    """Mark a single notification as read"""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    db = Database()
+    
+    # Verify notification belongs to user
+    notification = db.fetchone(
+        "SELECT id FROM notifications WHERE id=%s AND user_id=%s",
+        (notification_id, session["user_id"])
+    )
+    
+    if not notification:
+        db.close()
+        return jsonify({"error": "Notification not found"}), 404
+    
+    db.execute("""
+        UPDATE notifications 
+        SET is_read = TRUE, read_at = NOW()
+        WHERE id = %s
+    """, (notification_id,))
+    
+    db.close()
+    
+    return jsonify({"success": True, "message": "Notification marked as read"})
+
+
+# ============================================
+# MARK ALL NOTIFICATIONS AS READ
+# ============================================
+
+@notification_bp.route("/notifications/mark-all-read", methods=["POST"])
+def mark_all_notifications_read():
+    """Mark all notifications as read for the current user"""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    db = Database()
+    
+    db.execute("""
+        UPDATE notifications 
+        SET is_read = TRUE, read_at = NOW()
+        WHERE user_id = %s AND is_read = FALSE
+    """, (session["user_id"],))
+    
+    db.close()
+    
+    return jsonify({"success": True, "message": "All notifications marked as read"})
+
+
+# ============================================
+# NOTIFICATION PREFERENCES
 # ============================================
 
 @notification_bp.route("/notifications/preferences", methods=["GET", "POST"])
@@ -95,7 +154,7 @@ def notification_preferences():
 
 
 # ============================================
-# ADMIN - SEND CUSTOM NOTIFICATION TO ALL
+# ADMIN - NOTIFICATION MANAGEMENT
 # ============================================
 
 @notification_bp.route("/admin/notifications")
@@ -136,6 +195,7 @@ def admin_notifications():
         users=users
     )
 
+
 @notification_bp.route("/admin/notifications/send-all", methods=["POST"])
 def admin_send_to_all():
     if admin_required():
@@ -156,11 +216,11 @@ def admin_send_to_all():
     users = db.fetch("SELECT id FROM users WHERE is_active = TRUE")
     
     if not users:
-        flash("No users found to send notification.", "error")
+        flash("No users found.", "error")
         db.close()
         return redirect(url_for("notification.admin_notifications"))
     
-    # Send notification to all users
+    # Send to all users
     sent_count = 0
     for user in users:
         db.execute("""
@@ -171,8 +231,9 @@ def admin_send_to_all():
     
     db.close()
     
-    flash(f"✅ Custom notification sent to ALL {sent_count} user(s).", "success")
+    flash(f"✅ Notification sent to ALL {sent_count} user(s).", "success")
     return redirect(url_for("notification.admin_notifications"))
+
 
 @notification_bp.route("/admin/notifications/send-selected", methods=["POST"])
 def admin_send_selected():
@@ -212,11 +273,11 @@ def admin_send_selected():
         return redirect(url_for("notification.admin_notifications"))
     
     if not users:
-        flash("No users found for the selected recipient type.", "error")
+        flash("No users found for the selected type.", "error")
         db.close()
         return redirect(url_for("notification.admin_notifications"))
     
-    # Send notification to selected users
+    # Send to selected users
     sent_count = 0
     for user in users:
         db.execute("""
@@ -227,8 +288,9 @@ def admin_send_selected():
     
     db.close()
     
-    flash(f"✅ Custom notification sent to {sent_count} user(s).", "success")
+    flash(f"✅ Notification sent to {sent_count} user(s).", "success")
     return redirect(url_for("notification.admin_notifications"))
+
 
 @notification_bp.route("/admin/notifications/delete/<int:notification_id>", methods=["POST"])
 def admin_delete_notification(notification_id):
@@ -240,104 +302,4 @@ def admin_delete_notification(notification_id):
     db.close()
     
     flash("Notification deleted.", "success")
-    return redirect(url_for("notification.admin_notifications"))
-
-
-# ============================================
-# ADMIN - USER PREFERENCES CONTROL
-# ============================================
-
-@notification_bp.route("/admin/preferences/update/<int:user_id>", methods=["POST"])
-def admin_update_user_preferences(user_id):
-    if admin_required():
-        return redirect(url_for("auth.login"))
-    
-    preferences = {
-        'attendance_alerts': request.form.get("attendance_alerts") == "on",
-        'fee_alerts': request.form.get("fee_alerts") == "on",
-        'system_alerts': request.form.get("system_alerts") == "on",
-        'grade_alerts': request.form.get("grade_alerts") == "on",
-        'task_alerts': request.form.get("task_alerts") == "on",
-        'email_notifications': request.form.get("email_notifications") == "on",
-        'attendance_threshold': int(request.form.get("attendance_threshold", 75))
-    }
-    
-    db = Database()
-    
-    existing = db.fetchone(
-        "SELECT id FROM notification_preferences WHERE user_id = %s",
-        (user_id,)
-    )
-    
-    if existing:
-        db.execute("""
-            UPDATE notification_preferences 
-            SET attendance_alerts=%s, fee_alerts=%s, system_alerts=%s,
-                grade_alerts=%s, task_alerts=%s, email_notifications=%s,
-                attendance_threshold=%s, updated_at=NOW()
-            WHERE user_id=%s
-        """, (
-            preferences['attendance_alerts'],
-            preferences['fee_alerts'],
-            preferences['system_alerts'],
-            preferences['grade_alerts'],
-            preferences['task_alerts'],
-            preferences['email_notifications'],
-            preferences['attendance_threshold'],
-            user_id
-        ))
-    else:
-        db.execute("""
-            INSERT INTO notification_preferences 
-            (user_id, attendance_alerts, fee_alerts, system_alerts, grade_alerts, 
-             task_alerts, email_notifications, attendance_threshold)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            user_id,
-            preferences['attendance_alerts'],
-            preferences['fee_alerts'],
-            preferences['system_alerts'],
-            preferences['grade_alerts'],
-            preferences['task_alerts'],
-            preferences['email_notifications'],
-            preferences['attendance_threshold']
-        ))
-    
-    db.close()
-    
-    flash("User preferences updated successfully.", "success")
-    return redirect(url_for("notification.admin_notifications"))
-
-@notification_bp.route("/admin/preferences/toggle-all", methods=["POST"])
-def admin_toggle_all_preferences():
-    if admin_required():
-        return redirect(url_for("auth.login"))
-    
-    preference_type = request.form.get("preference_type")
-    value = request.form.get("value") == "true"
-    role_filter = request.form.get("role_filter", "all")
-    
-    if not preference_type:
-        flash("Preference type is required.", "error")
-        return redirect(url_for("notification.admin_notifications"))
-    
-    db = Database()
-    
-    query = """
-        UPDATE notification_preferences np
-        JOIN users u ON np.user_id = u.id
-        SET np.{} = %s, np.updated_at = NOW()
-        WHERE u.is_active = TRUE
-    """.format(preference_type)
-    
-    params = [value]
-    
-    if role_filter != "all":
-        query += " AND u.role = %s"
-        params.append(role_filter)
-    
-    db.execute(query, tuple(params))
-    db.close()
-    
-    flash(f"✅ {preference_type.replace('_', ' ').title()} toggled for all {role_filter} users.", "success")
     return redirect(url_for("notification.admin_notifications"))

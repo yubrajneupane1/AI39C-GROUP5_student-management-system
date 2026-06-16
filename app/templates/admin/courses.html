@@ -1,89 +1,51 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Acadlytics Courses</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "layouts/base.html" %}
 
-    <div class="sidebar">
-        <div class="logo-section">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
-        </div>
-        <ul>
-            <li><a href="/admin/dashboard">Dashboard</a></li>
-            <li><a href="/admin/students">Students</a></li>
-            <li><a href="/admin/teachers">Teachers</a></li>
-            <li class="active"><a href="/admin/courses">Courses</a></li>
-            <li><a href="/admin/assign">Assign Course</a></li>
-            <li><a href="/admin/attendance">Attendance</a></li>
-            <li><a href="/admin/marks">Marks</a></li>
-            <li><a href="/admin/fees">Fees</a></li>
-            <li><a href="/admin/reports">Reports</a></li>
-        </ul>
-    </div>
+{% block content %}
+<div class="dashboard-header">
+    <h1>Courses</h1>
+    <p>Manage all courses</p>
+</div>
 
-    <div class="main-content">
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
-        <div class="topbar">
-            <div>
-                <h3>Welcome, {{ username }}</h3>
-                <p>{{ role }}</p>
+<div class="topbar-action">
+    <a href="/admin/courses/add">
+        <button class="add-btn">+ Add Course</button>
+    </a>
+</div>
+
+<div class="courses-section">
+    <h2>All Courses</h2>
+    {% if courses %}
+        {% for c in courses %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ c.name }}</h3>
+                <div class="action-group">
+                    <span class="grade">{{ c.enrolled }}/{{ c.capacity }}</span>
+                    <a href="/admin/courses/edit/{{ c.id }}">
+                        <button class="edit-btn">Edit</button>
+                    </a>
+                    <form method="POST" action="/admin/courses/delete/{{ c.id }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this course?');">
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
             </div>
-            <a href="{{ url_for('auth.logout') }}">
-                <button class="logout-btn">Switch Account</button>
-            </a>
+            <p class="record-date">{{ c.description or 'No description' }} | Teacher: {{ c.teacher_name or 'Unassigned' }}</p>
         </div>
-
-        <div class="dashboard-header">
-            <h1>Courses</h1>
-            <p>Manage all courses</p>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No courses yet</h3>
+            </div>
         </div>
-
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for msg in messages %}
-                    <div class="flash-msg">{{ msg }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="topbar-action">
-            <a href="/admin/courses/add">
-                <button class="add-btn">+ Add Course</button>
-            </a>
-        </div>
-
-        <div class="courses-section">
-            <h2>All Courses</h2>
-            {% if courses %}
-                {% for c in courses %}
-                <div class="course-box">
-                    <div class="course-top">
-                        <h3>{{ c.name }}</h3>
-                        <div class="action-group">
-                            <span class="grade">{{ c.enrolled }}/{{ c.capacity }}</span>
-                            <a href="/admin/courses/edit/{{ c.id }}">
-                                <button class="edit-btn">Edit</button>
-                            </a>
-                            <form method="POST" action="/admin/courses/delete/{{ c.id }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this course?');">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
-                        </div>
-                    </div>
-                    <p class="record-date">{{ c.description or 'No description' }} | Teacher: {{ c.teacher_name or 'Unassigned' }}</p>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="course-box">
-                    <div class="course-top">
-                        <h3>No courses yet</h3>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-    </div>
-
-</body>
-</html>
+    {% endif %}
+</div>
+{% endblock %}

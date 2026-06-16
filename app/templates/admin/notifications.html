@@ -9,11 +9,6 @@
     <p>Create and send notifications to users</p>
 </div>
 
-<<<<<<< HEAD
-
-=======
-<!-- Flash Messages -->
->>>>>>> origin/nischal
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
@@ -134,12 +129,12 @@
 
     {% if notifications %}
         {% for n in notifications %}
-<<<<<<< HEAD
+
             <div class="notif-item {% if not n.is_read %}notif-unread{% else %}notif-read{% endif %}">
-=======
+
             <div style="border-left:4px solid {% if not n.is_read %}#4f46e5{% else %}#ccc{% endif %};
                         padding:12px; margin-bottom:10px; background:#fff;">
->>>>>>> origin/nischal
+
 
                 <h4>{{ n.title }}</h4>
                 <p>{{ n.message }}</p>
@@ -214,7 +209,7 @@ function toggleUserSelect() {
     padding: 8px;
     margin: 10px 0;
 }
-<<<<<<< HEAD
+
 
 .notif-item {
     border-left: 4px solid #ccc;
@@ -226,8 +221,7 @@ function toggleUserSelect() {
 .notif-item.notif-unread {
     border-left-color: #4f46e5;
 }
-=======
->>>>>>> origin/nischal
+
 </style>
 
 {% endblock %}

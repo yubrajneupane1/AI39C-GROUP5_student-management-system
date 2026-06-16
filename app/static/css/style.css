@@ -78,8 +78,7 @@ body {
 
 .logo {
     width: 160px;
-    display: block;
-    margin: 0 auto 20px;
+    height: 175px;
 }
 
 .text {
@@ -1297,4 +1296,88 @@ textarea {
 }
 .task-info-bar strong {
     font-weight: 700;
+}
+/* ============================================
+   LOGO HOVER EFFECTS
+   ============================================ */
+
+/* Logo link container */
+.logo-section a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    padding: 4px 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Logo image hover effect */
+.logo-section a .sidebar-logo {
+    transition: all 0.3s ease;
+}
+
+/* Logo brand text hover effect */
+.logo-section a .sidebar-brand {
+    transition: all 0.3s ease;
+    color: white;
+}
+
+/* ============================================
+   HOVER EFFECT 1: Scale & Glow (Default)
+   ============================================ */
+.logo-section a:hover {
+    transform: scale(1.02);
+}
+
+.logo-section a:hover .sidebar-logo {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.5));
+}
+
+.logo-section a:hover .sidebar-brand {
+    color: #818CF8;
+    text-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+}
+
+/* ============================================
+   HOVER EFFECT 2: Underline Animation
+   ============================================ */
+.logo-section a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #4F46E5, #818CF8);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.logo-section a:hover::after {
+    width: 100%;
+}
+
+/* ============================================
+   HOVER EFFECT 3: Background Glow
+   ============================================ */
+.logo-section a:hover {
+    background: rgba(79, 70, 229, 0.1);
+    padding: 4px 12px;
+    margin: 0 -12px;
+    border-radius: 8px;
+    box-shadow: 0 0 30px rgba(79, 70, 229, 0.05);
+}
+
+/* ============================================
+   ACTIVE/PRESSED STATE
+   ============================================ */
+.logo-section a:active {
+    transform: scale(0.98);
+}
+
+.logo-section a:active .sidebar-logo {
+    transform: scale(0.95);
 }
