@@ -1,0 +1,109 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Resources - Teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>📎 Resources</h1>
+    <p>Share notes, links, and references with your students</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-msg {% if category == 'error' %}flash-error{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Add Resource Form -->
+<div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+    <h3>➕ Add Resource</h3>
+    <form method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Course *</label>
+                <select name="course_id" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <option value="">— Select a course —</option>
+                    {% for c in courses %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Title *</label>
+                <input type="text" name="title" placeholder="e.g. Week 1 Notes" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Description</label>
+                <textarea name="description" rows="3" placeholder="Add notes or a description..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;"></textarea>
+            </div>
+            <div>
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Link <span style="font-weight:400; color: #64748b;">(optional)</span></label>
+                <input type="url" name="link" placeholder="https://..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Share a URL to an external resource</p>
+            </div>
+        </div>
+        <div style="margin-top: 16px;">
+            <button type="submit" class="btn-primary">Add Resource</button>
+        </div>
+    </form>
+</div>
+
+<!-- Resources List -->
+<div class="courses-section">
+    <h2>My Resources</h2>
+    {% if resources %}
+        {% for r in resources %}
+        <div class="course-box">
+            <div class="course-top">
+                <div>
+                    <h3>{{ r.title }}</h3>
+                    <span class="grade" style="font-size: 12px;">{{ r.course_name }}</span>
+                    {% if r.description %}
+                        <p class="record-date" style="margin-top: 4px;">{{ r.description }}</p>
+                    {% endif %}
+                    {% if r.link %}
+                        <a href="{{ r.link }}" target="_blank" style="font-size: 12.5px; color: #4f46e5; display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;">
+                            🔗 {{ r.link }}
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="action-group">
+                    <span class="grade" style="font-size: 11px;">{{ r.created_at.strftime('%b %d, %Y') }}</span>
+                    <form method="POST" action="/teacher/resources/delete/{{ r.id }}" style="display: inline;" onsubmit="return confirm('Delete this resource?');">
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No resources added yet</h3>
+            </div>
+            <p class="record-date">Use the form above to share notes or links with your students.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .btn-primary {
+        background: #4f46e5;
+        color: white;
+        padding: 8px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s;
+    }
+    .btn-primary:hover {
+        background: #4338ca;
+    }
+</style>
+{% endblock %}

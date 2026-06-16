@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ course.name }} - Teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>{{ course.name }}</h1>
+    <p>{{ course.description or 'No description.' }}</p>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div style="margin-bottom: 20px;">
+    <a href="/teacher/courses" style="color: #4f46e5; text-decoration: none; font-weight: 600;">← Back to Courses</a>
+</div>
+
+<div class="courses-section">
+    <h2>Course Content</h2>
+    <p class="record-date">Manage weeks, lessons, and materials for this course.</p>
+    
+    {% if weeks %}
+        {% for week in weeks %}
+        <div class="course-box" style="margin-bottom: 14px;">
+            <div class="course-top">
+                <h3>Week {{ week.week_number }}: {{ week.title }}</h3>
+                <span class="grade">{{ week.lessons | length }} lesson(s)</span>
+            </div>
+            
+            {% if week.lessons %}
+                <div style="margin: 12px 0 10px 4px;">
+                    {% for lesson in week.lessons %}
+                    <div style="padding: 8px 12px; background: #f8fafc; border-radius: 4px; margin-bottom: 6px; border-left: 3px solid #4f46e5;">
+                        <strong>{{ lesson.lesson_number }}. {{ lesson.title }}</strong>
+                        {% if lesson.content %}
+                            <p style="color: #64748b; font-size: 12.5px; margin: 4px 0 0 0;">{{ lesson.content[:120] }}{% if lesson.content|length > 120 %}…{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No content added yet</h3>
+            </div>
+            <p class="record-date">Start adding weeks and lessons to build your course.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

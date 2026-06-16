@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create User – Acadlytics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </div>
+        <ul>
+            <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+            <li class="active"><a href="{{ url_for('admin.students') }}">Students</a></li>
+            <li><a href="{{ url_for('admin.teachers') }}">Teachers</a></li>
+            <li><a href="{{ url_for('admin.courses') }}">Courses</a></li>
+            <li><a href="{{ url_for('admin.assign_course') }}">Assign Course</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+
+        <div class="topbar">
+            <div>
+                <h3>Welcome, {{ username }}</h3>
+                <p>{{ role }}</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}">
+                <button class="logout-btn">Switch Account</button>
+            </a>
+        </div>
+
+        <div class="dashboard-header">
+            <h1>Create New User</h1>
+            <p>Add a student, teacher, or admin account</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-msg">
+                    {% if category == 'error' %}⚠️{% else %}✅{% endif %} {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-section">
+            <form method="POST" id="createForm" novalidate>
+
+                <label for="fullname">Full Name</label>
+                <input type="text" id="fullname" name="fullname" placeholder="Enter full name" required>
+                <div style="color:#ef4444;font-size:12px;margin-top:-14px;margin-bottom:14px;display:none;" id="fullname-error">Full name is required.</div>
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter email" required>
+                <div style="color:#ef4444;font-size:12px;margin-top:-14px;margin-bottom:14px;display:none;" id="email-error">Please enter a valid email.</div>
+
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Choose username" required minlength="3">
+                <div style="color:#ef4444;font-size:12px;margin-top:-14px;margin-bottom:14px;display:none;" id="username-error">Username must be at least 3 characters.</div>
+
+                <label for="password">Password</label>
+                <div style="position:relative;">
+                    <input type="password" id="password" name="password" placeholder="Create password"
+                           autocomplete="new-password" style="padding-right:44px;" required>
+                    <button type="button" onclick="togglePassword('password', this)"
+                            style="position:absolute;right:12px;top:50%;transform:translateY(-60%);background:none;border:none;cursor:pointer;color:#6b7280;font-size:16px;width:auto;padding:0;">👁</button>
+                </div>
+
+                <div id="strengthMeter" style="display:none;margin-top:-10px;margin-bottom:6px;">
+                    <div style="display:flex;gap:4px;margin-bottom:4px;">
+                        <div class="bar" style="flex:1;height:4px;border-radius:2px;background:#e5e7eb;transition:background 0.3s;"></div>
+                        <div class="bar" style="flex:1;height:4px;border-radius:2px;background:#e5e7eb;transition:background 0.3s;"></div>
+                        <div class="bar" style="flex:1;height:4px;border-radius:2px;background:#e5e7eb;transition:background 0.3s;"></div>
+                        <div class="bar" style="flex:1;height:4px;border-radius:2px;background:#e5e7eb;transition:background 0.3s;"></div>
+                    </div>
+                    <div id="strengthLabel" style="font-size:12px;color:#6b7280;">Password strength</div>
+                </div>
+
+                <div id="requirements" style="display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+                    <div id="req-length"  style="font-size:12px;color:#6b7280;margin-bottom:3px;">● At least 8 characters</div>
+                    <div id="req-upper"   style="font-size:12px;color:#6b7280;margin-bottom:3px;">● One uppercase letter</div>
+                    <div id="req-lower"   style="font-size:12px;color:#6b7280;margin-bottom:3px;">● One lowercase letter</div>
+                    <div id="req-number"  style="font-size:12px;color:#6b7280;margin-bottom:3px;">● One number</div>
+                    <div id="req-special" style="font-size:12px;color:#6b7280;">● One special character (!@#$...)</div>
+                </div>
+
+                <div style="color:#ef4444;font-size:12px;margin-top:-14px;margin-bottom:14px;display:none;" id="password-error">Password does not meet all requirements.</div>
+
+                <label for="confirm_password">Confirm Password</label>
+                <div style="position:relative;">
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password"
+                           autocomplete="new-password" style="padding-right:44px;" required>
+                    <button type="button" onclick="togglePassword('confirm_password', this)"
+                            style="position:absolute;right:12px;top:50%;transform:translateY(-60%);background:none;border:none;cursor:pointer;color:#6b7280;font-size:16px;width:auto;padding:0;">👁</button>
+                </div>
+                <div style="color:#ef4444;font-size:12px;margin-top:-14px;margin-bottom:14px;display:none;" id="confirm-error">Passwords do not match.</div>
+
+                <label for="role">Role</label>
+                <select id="role" name="role" required
+                        style="width:100%;padding:12px;margin-bottom:20px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;background:#fff;">
+                    <option value="">Select role</option>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <div style="color:#ef4444;font-size:12px;margin-top:-14px;margin-bottom:14px;display:none;" id="role-error">Please select a role.</div>
+
+                <div style="display:flex;gap:12px;margin-top:8px;">
+                    <a href="{{ url_for('admin.students') }}" style="flex:1;">
+                        <button type="button" class="logout-btn" style="width:100%;">Cancel</button>
+                    </a>
+                    <button type="submit" style="flex:1;">Create User</button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        function togglePassword(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            if (input.type === 'password') { input.type = 'text'; btn.textContent = '👁'; }
+            else { input.type = 'password'; btn.textContent = '👁'; }
+        }
+        const passwordInput = document.getElementById('password');
+        const checks = {
+            length:  { el: document.getElementById('req-length'),  fn: p => p.length >= 8 },
+            upper:   { el: document.getElementById('req-upper'),   fn: p => /[A-Z]/.test(p) },
+            lower:   { el: document.getElementById('req-lower'),   fn: p => /[a-z]/.test(p) },
+            number:  { el: document.getElementById('req-number'),  fn: p => /[0-9]/.test(p) },
+            special: { el: document.getElementById('req-special'), fn: p => /[^A-Za-z0-9]/.test(p) },
+        };
+        const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+        const labels = ['Weak','Fair','Good','Strong'];
+        passwordInput.addEventListener('input', function() {
+            const val = this.value;
+            if (!val) { document.getElementById('strengthMeter').style.display='none'; document.getElementById('requirements').style.display='none'; return; }
+            document.getElementById('strengthMeter').style.display='block'; document.getElementById('requirements').style.display='block';
+            let score = 0;
+            for (const key in checks) { const met = checks[key].fn(val); checks[key].el.style.color = met ? '#22c55e' : '#6b7280'; if (met) score++; }
+            const bars = document.querySelectorAll('.bar'); const lvl = Math.min(score-1,3);
+            bars.forEach((b,i) => { b.style.background = i<=lvl && score>0 ? colors[lvl] : '#e5e7eb'; });
+            const lbl = document.getElementById('strengthLabel'); if (score>0) { lbl.textContent=labels[lvl]; lbl.style.color=colors[lvl]; }
+        });
+        document.getElementById('createForm').addEventListener('submit', function(e) {
+            let valid = true;
+            const fields = [
+                { id:'fullname', errId:'fullname-error', check: v => v.trim().length>0 },
+                { id:'email',    errId:'email-error',    check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+                { id:'username', errId:'username-error', check: v => v.trim().length>=3 },
+                { id:'role',     errId:'role-error',     check: v => v!=='' },
+            ];
+            fields.forEach(({ id, errId, check }) => {
+                const el=document.getElementById(id); const err=document.getElementById(errId);
+                const ok=check(el.value); el.style.borderColor=ok?'':'#ef4444'; err.style.display=ok?'none':'block';
+                if(!ok) valid=false;
+            });
+            const pw=passwordInput.value; const pwOk=Object.values(checks).every(c=>c.fn(pw));
+            passwordInput.style.borderColor=pwOk?'':'#ef4444'; document.getElementById('password-error').style.display=pwOk?'none':'block';
+            if(!pwOk) valid=false;
+            const confirm=document.getElementById('confirm_password'); const confirmErr=document.getElementById('confirm-error');
+            const match=pw===confirm.value&&confirm.value!=='';
+            confirm.style.borderColor=match?'':'#ef4444'; confirmErr.style.display=match?'none':'block';
+            if(!match) valid=false;
+            if(!valid) e.preventDefault();
+        });
+    </script>
+
+</body>
+</html>

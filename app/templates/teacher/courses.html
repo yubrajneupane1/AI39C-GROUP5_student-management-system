@@ -1,0 +1,40 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Courses - Teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>My Courses</h1>
+    <p>Manage content, tasks, and materials for each course</p>
+</div>
+
+<div class="courses-section">
+    <h2>Course List</h2>
+    
+    {% if courses %}
+        {% for course in courses %}
+        <div class="course-box">
+            <div class="course-top">
+                <div>
+                    <h3>{{ course.name }}</h3>
+                    <p class="record-date" style="margin-top: 4px;">{{ course.description or 'No description provided.' }}</p>
+                </div>
+                <div class="action-group">
+                    <span class="grade">{{ course.enrolled }} enrolled</span>
+                    <a href="/teacher/course/{{ course.id }}">
+                        <button class="btn-enter" style="padding: 7px 16px; font-size: 13px;">Manage</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No courses assigned yet</h3>
+            </div>
+            <p class="record-date">Contact your administrator to get courses assigned to your account.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

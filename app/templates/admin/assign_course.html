@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assign Course</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li><a href="/admin/students">Students</a></li>
+            <li><a href="/admin/teachers">Teachers</a></li>
+            <li><a href="/admin/courses">Courses</a></li>
+            <li class="active"><a href="/admin/assign">Assign Course</a></li>
+            <li><a href="/admin/attendance">Attendance</a></li>
+            <li><a href="/admin/marks">Marks</a></li>
+            <li><a href="/admin/fees">Fees</a></li>
+            <li><a href="/admin/reports">Reports</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+
+        <div class="topbar">
+            <div>
+                <h3>Welcome, {{ username }}</h3>
+                <p>{{ role }}</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}">
+                <button class="logout-btn">Switch Account</button>
+            </a>
+        </div>
+
+        <div class="dashboard-header">
+            <h1>Assign Course</h1>
+            <p>Enroll a student into a course</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for msg in messages %}
+                    <div class="flash-msg">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-section">
+            <form method="POST">
+
+                <label>Select Student</label>
+                <select name="student_id" required>
+                    <option value="">-- Select Student --</option>
+                    {% for s in students %}
+                        <option value="{{ s.id }}">{{ s.fullname }} ({{ s.username }})</option>
+                    {% endfor %}
+                </select>
+
+                <label>Select Course</label>
+                <select name="course_id" required>
+                    <option value="">-- Select Course --</option>
+                    {% for c in courses %}
+                        <option value="{{ c.id }}" {{ 'disabled' if c.enrolled >= c.capacity else '' }}>
+                            {{ c.name }} ({{ c.enrolled }}/{{ c.capacity }}{{ ' - FULL' if c.enrolled >= c.capacity else '' }})
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit">Assign Course</button>
+
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>
