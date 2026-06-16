@@ -1,0 +1,55 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Mark Attendance - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Mark Attendance - {{ course.name }}</h1>
+    <p>{{ today.strftime('%B %d, %Y') }}</p>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<form method="POST">
+    <div class="courses-section">
+        <h2>Students ({{ students|length }})</h2>
+        {% if students %}
+            {% for s in students %}
+            <div class="course-box">
+                <div class="course-top">
+                    <h3>{{ s.fullname }}</h3>
+                    <div class="action-group">
+                        <select name="status_{{ s.id }}" style="padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 4px;">
+                            <option value="">-- Select --</option>
+                            <option value="present" {% if s.today_status == 'present' %}selected{% endif %}>Present</option>
+                            <option value="absent" {% if s.today_status == 'absent' %}selected{% endif %}>Absent</option>
+                            <option value="late" {% if s.today_status == 'late' %}selected{% endif %}>Late</option>
+                            <option value="excused" {% if s.today_status == 'excused' %}selected{% endif %}>Excused</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="record-date">{{ s.email }}</p>
+            </div>
+            {% endfor %}
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn-primary">Save Attendance</button>
+                <a href="/teacher/attendance">
+                    <button type="button" class="logout-btn" style="margin-left: 10px;">Cancel</button>
+                </a>
+            </div>
+        {% else %}
+            <div class="course-box">
+                <div class="course-top">
+                    <h3>No students enrolled</h3>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}

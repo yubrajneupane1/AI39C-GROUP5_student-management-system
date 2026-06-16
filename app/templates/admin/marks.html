@@ -1,0 +1,43 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Marks - Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Marks Management</h1>
+    <p>Manage marks for all courses</p>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="courses-section">
+    <h2>Courses</h2>
+    {% if courses %}
+        {% for c in courses %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ c.name }}</h3>
+                <div class="action-group">
+                    <span class="grade">Teacher: {{ c.teacher_name or 'Unassigned' }}</span>
+                    <a href="/admin/marks/course/{{ c.id }}">
+                        <button class="edit-btn">Manage Marks</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No courses available</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
