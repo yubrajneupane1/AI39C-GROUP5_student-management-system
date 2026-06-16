@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Reports - Acadlytics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .report-section {
+            margin-bottom: 30px;
+        }
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .report-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-item .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .stat-item .label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .stat-item .value.good { color: #10b981; }
+        .stat-item .value.warning { color: #f59e0b; }
+        .stat-item .value.danger { color: #ef4444; }
+        .stat-item .value.primary { color: #4f46e5; }
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 20px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.6s ease;
+        }
+        .grade-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .grade-badge.A { background: #d1fae5; color: #065f46; }
+        .grade-badge.B { background: #dbeafe; color: #1e40af; }
+        .grade-badge.C { background: #fef3c7; color: #92400e; }
+        .grade-badge.D { background: #fee2e2; color: #991b1b; }
+        .grade-badge.F { background: #fecaca; color: #7f1d1d; }
+        .grade-badge.NA { background: #f1f5f9; color: #475569; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo">
+        </div>
+        <ul>
+            <li><a href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('student.courses') }}">My Courses</a></li>
+            <li><a href="{{ url_for('student.resources') }}">Resources</a></li>
+            <li><a href="{{ url_for('student.attendance') }}">Attendance</a></li>
+            <li><a href="{{ url_for('student.marks') }}">Marks</a></li>
+            <li><a href="{{ url_for('student.fees') }}">Fees</a></li>
+            <li class="active"><a href="{{ url_for('student.reports') }}">Reports</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <div>
+                <h3>Welcome, {{ username }}</h3>
+                <p>{{ role }}</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}">
+                <button class="logout-btn">Switch Account</button>
+            </a>
+        </div>
+
+        <div class="dashboard-header">
+            <h1>My Academic Reports</h1>
+            <p>Complete overview of your academic performance</p>
+        </div>
+
+        <!-- Overall Statistics -->
+        <div class="report-section">
+            <h2>Overall Performance</h2>
+            <div class="report-stats">
+                <div class="stat-item">
+                    <div class="value primary">{{ stats.overall_avg_marks or 0 }}%</div>
+                    <div class="label">Average Marks</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value {% if (stats.overall_attendance or 0) >= 75 %}good{% elif (stats.overall_attendance or 0) >= 60 %}warning{% else %}danger{% endif %}">
+                        {{ stats.overall_attendance or 0 }}%
+                    </div>
+                    <div class="label">Attendance</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value primary">{{ stats.enrolled_courses or 0 }}</div>
+                    <div class="label">Enrolled Courses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value primary">{{ stats.task_completion_rate or 0 }}%</div>
+                    <div class="label">Task Completion</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GPA -->
+        <div class="report-section">
+            <h2>GPA</h2>
+            <div class="report-card">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; font-weight: 700; color: #4f46e5;">{{ gpa or 0 }}</div>
+                    <div style="font-size: 14px; color: #64748b;">Cumulative GPA</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course-wise Performance -->
+        <div class="report-section">
+            <h2>Course Performance</h2>
+            {% if course_performance %}
+                {% for c in course_performance %}
+                <div class="report-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                        <div>
+                            <h3 style="margin-bottom: 4px;">{{ c.name }}</h3>
+                            <p style="font-size: 13px; color: #64748b;">{{ c.code or '' }} | Credits: {{ c.credits or 3 }}</p>
+                        </div>
+                        <div>
+                            <span class="grade-badge {% if c.grade %}{{ c.grade }}{% else %}NA{% endif %}">
+                                {{ c.grade or 'N/A' }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px;">
+                        <div>
+                            <div style="font-size: 13px; color: #64748b;">Average Marks</div>
+                            <div style="font-size: 18px; font-weight: 600;">{{ c.avg_marks or 0 }}%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ c.avg_marks or 0 }}%; background: {% if (c.avg_marks or 0) >= 80 %}#10b981{% elif (c.avg_marks or 0) >= 60 %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #64748b;">Attendance</div>
+                            <div style="font-size: 18px; font-weight: 600;">{{ c.attendance_percentage or 0 }}%</div>
+                            <div style="font-size: 12px; color: #64748b;">
+                                {{ c.present_attendance or 0 }} / {{ c.total_attendance or 0 }} classes
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ c.attendance_percentage or 0 }}%; background: {% if (c.attendance_percentage or 0) >= 75 %}#10b981{% elif (c.attendance_percentage or 0) >= 60 %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #64748b;">Tasks Completed</div>
+                            <div style="font-size: 18px; font-weight: 600;">
+                                {{ c.completed_course_tasks or 0 }} / {{ c.course_tasks or 0 }}
+                            </div>
+                            <div style="font-size: 12px; color: #64748b;">
+                                {{ ((c.completed_course_tasks or 0) / (c.course_tasks or 1) * 100)|round }}% completion
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ ((c.completed_course_tasks or 0) / (c.course_tasks or 1) * 100)|round }}%; background: #4f46e5;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="course-box">
+                    <div class="course-top">
+                        <h3>No course data available</h3>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Fee Summary -->
+        <div class="report-section">
+            <h2>Fee Summary</h2>
+            <div class="report-stats">
+                <div class="stat-item">
+                    <div class="value primary">${{ fee_summary.total_fees or 0 }}</div>
+                    <div class="label">Total Fees</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value good">${{ fee_summary.paid_fees or 0 }}</div>
+                    <div class="label">Paid</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value {% if (fee_summary.pending_fees or 0) > 0 %}danger{% else %}good{% endif %}">
+                        ${{ fee_summary.pending_fees or 0 }}
+                    </div>
+                    <div class="label">Pending</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

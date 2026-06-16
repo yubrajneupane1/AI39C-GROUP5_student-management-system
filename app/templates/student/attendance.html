@@ -1,0 +1,52 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Attendance{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Attendance</h1>
+    <p>Your attendance records</p>
+</div>
+
+<div class="cards">
+    <div class="card">
+        <h4>Attendance %</h4>
+        <h2>{{ att_percent }}%</h2>
+    </div>
+    <div class="card">
+        <h4>Total Classes</h4>
+        <h2>{{ summary.total or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Present</h4>
+        <h2>{{ summary.present or 0 }}</h2>
+    </div>
+    <div class="card">
+        <h4>Absent</h4>
+        <h2>{{ summary.absent or 0 }}</h2>
+    </div>
+</div>
+
+<div class="courses-section">
+    <h2>Attendance Records</h2>
+    {% if records %}
+        {% for r in records %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>{{ r.course_name }}</h3>
+                <span class="grade {{ r.status }}">
+                    {{ r.status | capitalize }}
+                </span>
+            </div>
+            <p class="record-date">{{ r.date }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="course-box">
+            <div class="course-top">
+                <h3>No attendance records yet</h3>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

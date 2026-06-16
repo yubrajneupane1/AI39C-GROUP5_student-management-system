@@ -1,0 +1,143 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>{{ course.name }}</h1>
+    <p>👨‍🏫 {{ course.teacher_name or 'Instructor' }} &nbsp;·&nbsp; {{ course.description or '' }}</p>
+</div>
+
+<div style="margin-bottom: 16px;">
+    <a href="{{ url_for('student.courses') }}" style="color: #4f46e5; text-decoration: none;">← Back to Courses</a>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash-msg">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Tab Navigation -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+    <button onclick="showTab('lessons')" class="tab-btn active" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #4f46e5; border-bottom: 2px solid #4f46e5; margin-bottom: -10px;">📚 Lessons</button>
+    <button onclick="showTab('materials')" class="tab-btn" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b;">📄 Materials</button>
+    <button onclick="showTab('tasks')" class="tab-btn" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b;">✅ Tasks</button>
+</div>
+
+<!-- Lessons Tab -->
+<div id="tab-lessons" class="tab-content">
+    <div class="courses-section">
+        <h2>Course Content</h2>
+        {% if weeks %}
+            {% for week in weeks %}
+                <div style="margin-bottom: 16px;">
+                    <h3 style="color: #4f46e5; font-size: 14px;">Week {{ week.week_number }}: {{ week.title }}</h3>
+                    {% if week.lessons %}
+                        {% for lesson in week.lessons %}
+                        <div style="padding: 10px 16px; background: #f8fafc; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #4f46e5;">
+                            <strong>{{ lesson.lesson_number }}. {{ lesson.title }}</strong>
+                            {% if lesson.content %}
+                                <p style="color: #64748b; font-size: 13px; margin: 4px 0 0 0;">{{ lesson.content }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: #94a3b8; font-size: 14px;">No lessons yet.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #94a3b8;">No content added yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Materials Tab -->
+<div id="tab-materials" class="tab-content" style="display: none;">
+    <div class="courses-section">
+        <h2>Study Materials</h2>
+        {% if materials %}
+            {% for m in materials %}
+            <div class="course-box">
+                <div class="course-top">
+                    <div>
+                        <h3>{{ m.title }}</h3>
+                        <span class="grade" style="font-size: 12px;">{{ m.course_name }}</span>
+                        {% if m.week_title %}
+                            <span class="grade" style="font-size: 12px; background: #f59e0b; color: white;">Week: {{ m.week_title }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="grade">{{ m.material_type | capitalize }}</span>
+                </div>
+                {% if m.description %}
+                    <p style="margin: 8px 0; color: #666; font-size: 14px;">{{ m.description }}</p>
+                {% endif %}
+                {% if m.file_url %}
+                    <a href="{{ m.file_url }}" target="_blank" style="display: inline-block; background: #4f46e5; color: white; padding: 6px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; margin-top: 8px;">📎 View Material</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #94a3b8;">No materials available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tasks Tab -->
+<div id="tab-tasks" class="tab-content" style="display: none;">
+    <div class="courses-section">
+        <h2>Tasks & Assignments</h2>
+        {% if tasks %}
+            {% for t in tasks %}
+            <div class="course-box" style="{% if t.submission_status == 'graded' %}border-left: 4px solid #10b981;{% elif t.submission_status == 'late' %}border-left: 4px solid #dc2626;{% elif t.submission_status == 'submitted' %}border-left: 4px solid #3b82f6;{% endif %}">
+                <div class="course-top">
+                    <h3>{{ t.title }}</h3>
+                    <div>
+                        {% if t.submission_status == 'graded' %}
+                            <span class="grade" style="background: #10b981; color: white;">Graded</span>
+                        {% elif t.submission_status == 'late' %}
+                            <span class="grade" style="background: #dc2626; color: white;">Late</span>
+                        {% elif t.submission_status == 'submitted' %}
+                            <span class="grade" style="background: #3b82f6; color: white;">Submitted</span>
+                        {% else %}
+                            <span class="grade" style="background: #f59e0b; color: white;">Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <p style="font-size: 13px; color: #64748b; margin: 4px 0;">
+                    {% if t.due_date %}Due: {{ t.due_date.strftime('%b %d, %Y %I:%M %p') }}{% else %}No deadline{% endif %}
+                    {% if t.time_limit_minutes %} | Time: {{ t.time_limit_minutes }} min{% endif %}
+                </p>
+                {% if t.description %}
+                    <p style="margin: 8px 0; color: #666; font-size: 14px;">{{ t.description }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #94a3b8;">No tasks available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(function(tab) {
+        tab.style.display = 'none';
+    });
+    // Show selected tab
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    // Update button styles
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.style.color = '#64748b';
+        btn.style.borderBottom = 'none';
+    });
+    // Highlight active button
+    event.target.style.color = '#4f46e5';
+    event.target.style.borderBottom = '2px solid #4f46e5';
+}
+</script>
+{% endblock %}
