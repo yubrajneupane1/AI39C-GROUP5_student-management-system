@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash
 from app.models.database import Database
+from app.auth import login_required, student_required
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -12,24 +13,20 @@ ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "ppt", "pptx", "txt", "png", "jpg", 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def student_required():
-    return "role" not in session or session["role"] != "student"
-
 # ============================================
 # STUDENT - DASHBOARD
 # ============================================
 
 @student_bp.route("/student/dashboard")
+@login_required
+@student_required
 def dashboard():
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
-    # Get courses
+    # Get enrolled courses
     courses = db.fetch("""
-        SELECT c.id, c.name
+        SELECT c.id, c.name, c.description
         FROM courses c
         JOIN enrollments e ON c.id = e.course_id
         WHERE e.student_id = %s
@@ -41,7 +38,7 @@ def dashboard():
         FROM attendance WHERE student_id = %s
     """, (student_id,))
     
-    # Get marks
+    # Get marks average
     avg_marks = db.fetchone("""
         SELECT ROUND(AVG(score / total * 100), 1) as average
         FROM marks WHERE student_id = %s
@@ -49,6 +46,18 @@ def dashboard():
     
     # Get fees
     fees = db.fetch("SELECT status FROM fee_records WHERE student_id = %s", (student_id,))
+    
+    # Get pending tasks count
+    pending_tasks = db.fetchone("""
+        SELECT COUNT(*) as count
+        FROM tasks t
+        JOIN enrollments e ON t.course_id = e.course_id
+        WHERE e.student_id = %s
+          AND t.id NOT IN (
+              SELECT task_id FROM task_submissions WHERE student_id = %s
+          )
+          AND (t.due_date IS NULL OR t.due_date >= NOW())
+    """, (student_id, student_id))
     
     # Get recent notifications
     notifications = db.fetch("""
@@ -68,7 +77,7 @@ def dashboard():
     fee_status = "Unpaid" if unpaid > 0 else "Paid"
     
     return render_template(
-        "student/dashboard.html",
+        "home.html",
         username=session["username"],
         role=session["role"],
         courses=courses,
@@ -76,17 +85,19 @@ def dashboard():
         avg_marks=avg_marks["average"] if avg_marks and avg_marks["average"] else 0,
         fee_status=fee_status,
         total_courses=len(courses),
-        notifications=notifications
+        pending_tasks=pending_tasks["count"] if pending_tasks else 0,
+        notifications=notifications,
+        active_page="student_dashboard"
     )
+
 # ============================================
 # STUDENT - COURSES
 # ============================================
 
 @student_bp.route("/student/courses")
+@login_required
+@student_required
 def courses():
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
@@ -101,7 +112,7 @@ def courses():
         LEFT JOIN tasks t ON c.id = t.course_id
         LEFT JOIN study_materials sm ON c.id = sm.course_id
         WHERE e.student_id = %s
-        GROUP BY c.id
+        GROUP BY c.id, c.name, c.description, u.fullname
     """, (student_id,))
     
     db.close()
@@ -111,25 +122,28 @@ def courses():
         username=session["username"],
         role=session["role"],
         courses=courses,
+        active_page="student_courses"
     )
 
+
 @student_bp.route("/student/course/<int:course_id>")
+@login_required
+@student_required
 def course_detail(course_id):
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
+    # Verify enrollment
     enrollment = db.fetchone("""
         SELECT id FROM enrollments
         WHERE student_id=%s AND course_id=%s
     """, (student_id, course_id))
     
     if not enrollment:
-        flash("You are not enrolled in this course.")
+        flash("You are not enrolled in this course.", "error")
         return redirect(url_for("student.courses"))
     
+    # Get course details
     course = db.fetchone("""
         SELECT c.*, u.fullname as teacher_name
         FROM courses c
@@ -137,6 +151,7 @@ def course_detail(course_id):
         WHERE c.id = %s
     """, (course_id,))
     
+    # Get weeks and lessons
     weeks = db.fetch(
         "SELECT * FROM weeks WHERE course_id=%s ORDER BY week_number",
         (course_id,)
@@ -147,14 +162,17 @@ def course_detail(course_id):
             (week["id"],)
         )
     
+    # Get study materials
     materials = db.fetch("""
-        SELECT sm.*, w.title as week_title, w.week_number
+        SELECT sm.*, c.name as course_name, w.title as week_title, w.week_number
         FROM study_materials sm
+        JOIN courses c ON sm.course_id = c.id
         LEFT JOIN weeks w ON sm.week_id = w.id
         WHERE sm.course_id = %s
         ORDER BY w.week_number, sm.created_at DESC
     """, (course_id,))
     
+    # Get tasks with submission status
     tasks = db.fetch("""
         SELECT t.*,
                w.title as week_title,
@@ -185,13 +203,18 @@ def course_detail(course_id):
         materials=materials,
         tasks=tasks,
         now=now,
+        active_page="student_courses"
     )
 
+
+# ============================================
+# STUDENT - SUBMIT TASK
+# ============================================
+
 @student_bp.route("/student/task/<int:task_id>/submit", methods=["POST"])
+@login_required
+@student_required
 def submit_task(task_id):
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     student_id = session["user_id"]
     text_answer = request.form.get("text_answer", "")
     file_url = None
@@ -200,20 +223,27 @@ def submit_task(task_id):
     task = db.fetchone("SELECT * FROM tasks WHERE id=%s", (task_id,))
     
     if not task:
-        flash("Task not found.")
+        flash("Task not found.", "error")
         db.close()
         return redirect(url_for("student.courses"))
     
+    # Check if already submitted
     existing = db.fetchone("""
         SELECT id FROM task_submissions
         WHERE task_id=%s AND student_id=%s
     """, (task_id, student_id))
     
     if existing:
-        flash("You have already submitted this task.")
+        flash("You have already submitted this task.", "warning")
         db.close()
         return redirect(url_for("student.course_detail", course_id=task["course_id"]))
     
+    # Check if overdue
+    if task["due_date"] and datetime.now() > task["due_date"]:
+        # Allow late submission but mark as late
+        pass
+    
+    # Handle file upload
     if "file" in request.files and request.files["file"].filename != "":
         file = request.files["file"]
         if allowed_file(file.filename):
@@ -223,10 +253,11 @@ def submit_task(task_id):
             file.save(os.path.join(UPLOAD_FOLDER, filename))
             file_url = f"/static/uploads/submissions/{filename}"
         else:
-            flash("File type not allowed.")
+            flash("File type not allowed.", "error")
             db.close()
             return redirect(url_for("student.course_detail", course_id=task["course_id"]))
     
+    # Determine if late
     status = "submitted"
     if task["due_date"] and datetime.now() > task["due_date"]:
         status = "late"
@@ -238,18 +269,19 @@ def submit_task(task_id):
     """, (task_id, student_id, text_answer, file_url, status))
     
     db.close()
-    flash("Task submitted successfully!" if status == "submitted" else "Task submitted (late).")
+    
+    flash("Task submitted successfully!" if status == "submitted" else "Task submitted (late).", "success")
     return redirect(url_for("student.course_detail", course_id=task["course_id"]))
 
+
 # ============================================
-# STUDENT - RESOURCES 
+# STUDENT - RESOURCES
 # ============================================
 
 @student_bp.route("/student/resources")
+@login_required
+@student_required
 def resources():
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
@@ -282,18 +314,19 @@ def resources():
         username=session["username"],
         role=session["role"],
         resources=resources,
-        materials=materials
+        materials=materials,
+        active_page="student_resources"
     )
+
 
 # ============================================
 # STUDENT - ATTENDANCE
 # ============================================
 
 @student_bp.route("/student/attendance")
+@login_required
+@student_required
 def attendance():
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
@@ -325,23 +358,27 @@ def attendance():
         records=records,
         summary=summary,
         att_percent=att_percent,
+        active_page="student_attendance"
     )
+
 
 # ============================================
 # STUDENT - MARKS
 # ============================================
 
 @student_bp.route("/student/marks")
+@login_required
+@student_required
 def marks():
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
     records = db.fetch("""
         SELECT m.title, m.score, m.total, c.name as course_name,
-               ROUND(m.score / m.total * 100, 1) as percentage
+               ROUND(m.score / m.total * 100, 1) as percentage,
+               (SELECT grade FROM grade_scale 
+                WHERE ROUND(m.score / m.total * 100, 1) BETWEEN min_score AND max_score 
+                LIMIT 1) as grade
         FROM marks m
         JOIN courses c ON m.course_id = c.id
         WHERE m.student_id = %s
@@ -361,17 +398,18 @@ def marks():
         role=session["role"],
         records=records,
         average=avg["average"] if avg and avg["average"] else 0,
+        active_page="student_marks"
     )
+
 
 # ============================================
 # STUDENT - FEES
 # ============================================
 
 @student_bp.route("/student/fees")
+@login_required
+@student_required
 def fees():
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
@@ -395,17 +433,18 @@ def fees():
         total=total,
         paid=paid,
         unpaid=unpaid,
+        active_page="student_fees"
     )
+
 
 # ============================================
 # STUDENT - REPORTS
 # ============================================
 
 @student_bp.route("/student/reports")
+@login_required
+@student_required
 def reports():
-    if student_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     student_id = session["user_id"]
     
@@ -491,5 +530,6 @@ def reports():
         stats=stats,
         course_performance=course_performance,
         gpa=gpa,
-        fee_summary=fee_summary
+        fee_summary=fee_summary,
+        active_page="student_reports"
     )

@@ -17,42 +17,379 @@
 {% endwith %}
 
 <div style="margin-bottom: 20px;">
-    <a href="/teacher/courses" style="color: #4f46e5; text-decoration: none; font-weight: 600;">← Back to Courses</a>
+    <a href="{{ url_for('teacher.courses') }}" style="color: #4f46e5; text-decoration: none; font-weight: 600;">← Back to Courses</a>
 </div>
 
-<div class="courses-section">
-    <h2>Course Content</h2>
-    <p class="record-date">Manage weeks, lessons, and materials for this course.</p>
-    
-    {% if weeks %}
-        {% for week in weeks %}
-        <div class="course-box" style="margin-bottom: 14px;">
-            <div class="course-top">
-                <h3>Week {{ week.week_number }}: {{ week.title }}</h3>
-                <span class="grade">{{ week.lessons | length }} lesson(s)</span>
+<!-- Tab Navigation -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+    <button onclick="showTab('weeks')" class="tab-btn active" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #4f46e5; border-bottom: 2px solid #4f46e5; margin-bottom: -10px;">📚 Weeks & Lessons</button>
+    <button onclick="showTab('materials')" class="tab-btn" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b;">📄 Materials</button>
+    <button onclick="showTab('tasks')" class="tab-btn" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b;">✅ Tasks</button>
+</div>
+
+<!-- ============================================ -->
+<!-- TAB 1: WEEKS & LESSONS -->
+<!-- ============================================ -->
+<div id="tab-weeks" class="tab-content">
+
+    <!-- Add Week Form -->
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+        <h3>➕ Add Week</h3>
+        <form method="POST" action="{{ url_for('teacher.add_week', course_id=course.id) }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Week Number</label>
+                    <input type="number" name="week_number" min="1" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Week Title</label>
+                    <input type="text" name="title" placeholder="e.g. Introduction to Python" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
             </div>
-            
-            {% if week.lessons %}
-                <div style="margin: 12px 0 10px 4px;">
-                    {% for lesson in week.lessons %}
-                    <div style="padding: 8px 12px; background: #f8fafc; border-radius: 4px; margin-bottom: 6px; border-left: 3px solid #4f46e5;">
-                        <strong>{{ lesson.lesson_number }}. {{ lesson.title }}</strong>
-                        {% if lesson.content %}
-                            <p style="color: #64748b; font-size: 12.5px; margin: 4px 0 0 0;">{{ lesson.content[:120] }}{% if lesson.content|length > 120 %}…{% endif %}</p>
+            <div style="margin-top: 12px;">
+                <button type="submit" class="btn-primary">Add Week</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Weeks List -->
+    <div class="courses-section">
+        <h2>Course Structure</h2>
+        {% if weeks %}
+            {% for week in weeks %}
+            <div class="course-box" style="margin-bottom: 14px;">
+                <div class="course-top">
+                    <h3>Week {{ week.week_number }}: {{ week.title }}</h3>
+                    <span class="grade">{{ week.lessons | length }} lesson(s)</span>
+                </div>
+
+                <!-- Lessons List -->
+                {% if week.lessons %}
+                    <div style="margin: 12px 0 10px 4px;">
+                        {% for lesson in week.lessons %}
+                        <div style="padding: 8px 12px; background: #f8fafc; border-radius: 4px; margin-bottom: 6px; border-left: 3px solid #4f46e5;">
+                            <strong>{{ lesson.lesson_number }}. {{ lesson.title }}</strong>
+                            {% if lesson.content %}
+                                <p style="color: #64748b; font-size: 12.5px; margin: 4px 0 0 0;">{{ lesson.content[:120] }}{% if lesson.content|length > 120 %}…{% endif %}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Add Lesson Form -->
+                <details style="margin-top: 10px;">
+                    <summary style="cursor: pointer; font-size: 13px; color: #4f46e5; font-weight: 600; list-style: none; user-select: none; padding: 4px 0;">
+                        ➕ Add Lesson to this week
+                    </summary>
+                    <form method="POST" action="{{ url_for('teacher.add_lesson', week_id=week.id) }}" style="margin-top: 14px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Lesson Number</label>
+                                <input type="number" name="lesson_number" min="1" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Lesson Title</label>
+                                <input type="text" name="title" placeholder="e.g. Variables and Types" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Content / Notes</label>
+                            <textarea name="content" rows="3" placeholder="Optional lesson notes..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;"></textarea>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <button type="submit" class="btn-primary">Add Lesson</button>
+                        </div>
+                    </form>
+                </details>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="course-box">
+                <div class="course-top">
+                    <h3>No content added yet</h3>
+                </div>
+                <p class="record-date">Start adding weeks and lessons to build your course.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- TAB 2: MATERIALS -->
+<!-- ============================================ -->
+<div id="tab-materials" class="tab-content" style="display: none;">
+
+    <!-- Add Material Form -->
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+        <h3>📎 Add Study Material</h3>
+        <form method="POST" action="{{ url_for('teacher.add_material', course_id=course.id) }}" enctype="multipart/form-data">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Material Type</label>
+                    <select name="material_type" onchange="toggleMaterialFields(this.value)" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        <option value="manual">Manual / Notes</option>
+                        <option value="file">File Upload</option>
+                        <option value="link">Link</option>
+                        <option value="video">Video Link</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Title</label>
+                    <input type="text" name="title" placeholder="e.g. Chapter 2 Slides" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+            </div>
+
+            <div style="margin-top: 12px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Link to Week <span style="font-weight:400; color: #64748b;">(optional)</span></label>
+                <select name="week_id" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <option value="">— No specific week —</option>
+                    {% for w in weeks %}
+                        <option value="{{ w.id }}">Week {{ w.week_number }}: {{ w.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-top: 12px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Description</label>
+                <textarea name="description" rows="2" placeholder="Brief description (optional)..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;"></textarea>
+            </div>
+
+            <div id="file-upload-div" style="margin-top: 12px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Upload File</label>
+                <input type="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.zip" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            </div>
+
+            <div id="link-upload-div" style="margin-top: 12px; display: none;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">URL</label>
+                <input type="url" name="link_url" placeholder="https://..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            </div>
+
+            <div style="margin-top: 16px;">
+                <button type="submit" class="btn-primary">Add Material</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Materials List -->
+    <div class="courses-section">
+        <h2>All Materials</h2>
+        {% if materials %}
+            {% for m in materials %}
+            <div class="course-box">
+                <div class="course-top">
+                    <div>
+                        <h3>
+                            <span class="grade" style="font-size: 11px;">{{ m.material_type | capitalize }}</span>
+                            &nbsp;{{ m.title }}
+                        </h3>
+                        {% if m.description %}
+                            <p class="record-date" style="margin-top: 4px;">{{ m.description }}</p>
                         {% endif %}
                     </div>
-                    {% endfor %}
+                    <div class="action-group">
+                        {% if m.week_title %}
+                            <span class="grade" style="background: #f59e0b; color: white;">{{ m.week_title }}</span>
+                        {% endif %}
+                        {% if m.file_url %}
+                            <a href="{{ m.file_url }}" target="_blank" class="btn-view">View</a>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('teacher.delete_material', material_id=m.id) }}" style="display:inline;" onsubmit="return confirm('Delete this material?');">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </div>
                 </div>
-            {% endif %}
-        </div>
-        {% endfor %}
-    {% else %}
-        <div class="course-box">
-            <div class="course-top">
-                <h3>No content added yet</h3>
             </div>
-            <p class="record-date">Start adding weeks and lessons to build your course.</p>
-        </div>
-    {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="course-box">
+                <div class="course-top">
+                    <h3>No materials added yet</h3>
+                </div>
+                <p class="record-date">Upload study materials for your students.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<!-- ============================================ -->
+<!-- TAB 3: TASKS -->
+<!-- ============================================ -->
+<div id="tab-tasks" class="tab-content" style="display: none;">
+
+    <!-- Add Task Form -->
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+        <h3>📝 Create Task</h3>
+        <form method="POST" action="{{ url_for('teacher.add_task', course_id=course.id) }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Task Title</label>
+                    <input type="text" name="title" placeholder="e.g. Assignment 1: SQL Queries" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Submission Type</label>
+                    <select name="submission_type" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        <option value="text">Text Only</option>
+                        <option value="file">File Upload Only</option>
+                        <option value="both">Text + File</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Due Date &amp; Time</label>
+                    <input type="datetime-local" name="due_date" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Time Limit <span style="font-weight:400; color: #64748b;">(minutes, optional)</span></label>
+                    <input type="number" name="time_limit_minutes" min="1" placeholder="e.g. 60" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+            </div>
+
+            <div style="margin-top: 12px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Link to Week <span style="font-weight:400; color: #64748b;">(optional)</span></label>
+                <select name="week_id" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <option value="">— General, no specific week —</option>
+                    {% for w in weeks %}
+                    <option value="{{ w.id }}">Week {{ w.week_number }}: {{ w.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-top: 12px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px;">Instructions</label>
+                <textarea name="description" rows="4" placeholder="Describe the task, requirements, and any submission guidelines..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;"></textarea>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <button type="submit" class="btn-primary">Create Task</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tasks List -->
+    <div class="courses-section">
+        <h2>All Tasks</h2>
+        {% if tasks %}
+            {% for t in tasks %}
+            <div class="course-box">
+                <div class="course-top">
+                    <div>
+                        <h3>{{ t.title }}</h3>
+                        {% if t.description %}
+                            <p class="record-date" style="margin-top: 4px;">{{ t.description[:200] }}{% if t.description|length > 200 %}…{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    <div class="action-group">
+                        <span class="grade">{{ t.submission_count or 0 }} submitted</span>
+                        <a href="{{ url_for('teacher.task_submissions', task_id=t.id) }}" class="btn-view">View Submissions</a>
+                        <form method="POST" action="{{ url_for('teacher.delete_task', task_id=t.id) }}" style="display:inline;" onsubmit="return confirm('Delete this task and all its submissions?');">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="task-meta">
+                    {% if t.due_date %}
+                        <span>📅 Due: <strong>{{ t.due_date.strftime('%d %b %Y, %I:%M %p') }}</strong></span>
+                    {% else %}
+                        <span>No deadline</span>
+                    {% endif %}
+                    {% if t.time_limit_minutes %}
+                        <span>⏱ {{ t.time_limit_minutes }} min limit</span>
+                    {% endif %}
+                    <span>{{ t.submission_type }} submission</span>
+                    {% if t.week_title %}
+                        <span>📅 {{ t.week_title }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="course-box">
+                <div class="course-top">
+                    <h3>No tasks created yet</h3>
+                </div>
+                <p class="record-date">Create assignments for your students.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function showTab(tabName, btn) {
+    document.querySelectorAll('.tab-content').forEach(function(el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.tab-btn').forEach(function(el) {
+        el.classList.remove('active');
+        el.style.color = '#64748b';
+        el.style.borderBottom = 'none';
+    });
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    btn.classList.add('active');
+    btn.style.color = '#4f46e5';
+    btn.style.borderBottom = '2px solid #4f46e5';
+}
+
+function toggleMaterialFields(value) {
+    var fileDiv = document.getElementById('file-upload-div');
+    var linkDiv = document.getElementById('link-upload-div');
+    if (value === 'link' || value === 'video') {
+        fileDiv.style.display = 'none';
+        linkDiv.style.display = 'block';
+    } else {
+        fileDiv.style.display = 'block';
+        linkDiv.style.display = 'none';
+    }
+}
+
+// Set active tab from URL hash
+var hash = window.location.hash;
+if (hash === '#materials') {
+    showTab('materials', document.querySelectorAll('.tab-btn')[1]);
+} else if (hash === '#tasks') {
+    showTab('tasks', document.querySelectorAll('.tab-btn')[2]);
+}
+</script>
+
+<style>
+.btn-primary {
+    background: #4f46e5;
+    color: white;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-primary:hover {
+    background: #4338ca;
+}
+.btn-view {
+    background: #0d9488;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+}
+.delete-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.delete-btn:hover {
+    background: #b91c1c;
+}
+.tab-btn.active {
+    color: #4f46e5 !important;
+    border-bottom: 2px solid #4f46e5 !important;
+}
+</style>
 {% endblock %}
