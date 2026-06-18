@@ -13,7 +13,7 @@ class AuthRoutes:
     def register(self):
 
         self.bp.route("/", methods=["GET", "POST"])(
-            self.controller.login
+            self.controller.home
         )
 
         self.bp.route("/login", methods=["GET", "POST"])(
