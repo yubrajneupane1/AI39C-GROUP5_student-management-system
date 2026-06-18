@@ -1,24 +1,28 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash
 from app.models.database import Database
+from app.auth import login_required, teacher_required
 from datetime import datetime, date
 from app.models.attendance_model import AttendanceModel
 from app.models.marks_model import MarksModel
+import os
+from werkzeug.utils import secure_filename
 
-# Define the blueprint FIRST
 teacher_bp = Blueprint("teacher", __name__)
 
-def teacher_required():
-    return "role" not in session or session["role"] != "teacher"
+UPLOAD_FOLDER = os.path.join("app", "static", "uploads")
+ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "ppt", "pptx", "txt", "png", "jpg", "jpeg", "zip"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ============================================
 # TEACHER - DASHBOARD
 # ============================================
 
 @teacher_bp.route("/teacher/dashboard")
+@login_required
+@teacher_required
 def dashboard():
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     teacher_id = session["user_id"]
     
@@ -68,10 +72,9 @@ def dashboard():
 # ============================================
 
 @teacher_bp.route("/teacher/students")
+@login_required
+@teacher_required
 def students():
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     teacher_id = session["user_id"]
     
@@ -97,10 +100,9 @@ def students():
 # ============================================
 
 @teacher_bp.route("/teacher/courses")
+@login_required
+@teacher_required
 def courses():
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     courses = db.fetch("""
         SELECT c.*,
@@ -121,11 +123,11 @@ def courses():
     )
 
 @teacher_bp.route("/teacher/course/<int:course_id>")
+@login_required
+@teacher_required
 def course_detail(course_id):
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
+    
     course = db.fetchone("SELECT * FROM courses WHERE id=%s AND teacher_id=%s", (course_id, session["user_id"]))
     
     if not course:
@@ -142,7 +144,6 @@ def course_detail(course_id):
             "SELECT * FROM lessons WHERE week_id=%s ORDER BY lesson_number",
             (week["id"],)
         )
-    
     total_lessons = sum(len(week["lessons"]) for week in weeks)
     
     materials = db.fetch("""
@@ -179,18 +180,278 @@ def course_detail(course_id):
     )
 
 # ============================================
-# TEACHER - RESOURCES (Complete)
+# TEACHER - ADD WEEK
+# ============================================
+
+@teacher_bp.route("/teacher/course/<int:course_id>/week/add", methods=["POST"])
+@login_required
+@teacher_required
+def add_week(course_id):
+    week_number = request.form["week_number"]
+    title = request.form["title"]
+    
+    db = Database()
+    course = db.fetchone("SELECT id FROM courses WHERE id=%s AND teacher_id=%s", (course_id, session["user_id"]))
+    if not course:
+        flash("Course not found or you don't have permission.", "error")
+        db.close()
+        return redirect(url_for("teacher.courses"))
+    
+    db.execute(
+        "INSERT INTO weeks (course_id, week_number, title) VALUES (%s,%s,%s)",
+        (course_id, week_number, title)
+    )
+    db.close()
+    
+    flash("Week added successfully.", "success")
+    return redirect(url_for("teacher.course_detail", course_id=course_id))
+
+# ============================================
+# TEACHER - ADD LESSON
+# ============================================
+
+@teacher_bp.route("/teacher/week/<int:week_id>/lesson/add", methods=["POST"])
+@login_required
+@teacher_required
+def add_lesson(week_id):
+    lesson_number = request.form["lesson_number"]
+    title = request.form["title"]
+    content = request.form.get("content", "")
+    
+    db = Database()
+    week = db.fetchone("SELECT * FROM weeks WHERE id=%s", (week_id,))
+    if not week:
+        flash("Week not found.", "error")
+        db.close()
+        return redirect(url_for("teacher.courses"))
+    
+    course = db.fetchone("SELECT id FROM courses WHERE id=%s AND teacher_id=%s", (week["course_id"], session["user_id"]))
+    if not course:
+        flash("You don't have permission.", "error")
+        db.close()
+        return redirect(url_for("teacher.courses"))
+    
+    db.execute(
+        "INSERT INTO lessons (week_id, lesson_number, title, content) VALUES (%s,%s,%s,%s)",
+        (week_id, lesson_number, title, content)
+    )
+    db.close()
+    
+    flash("Lesson added successfully.", "success")
+    return redirect(url_for("teacher.course_detail", course_id=week["course_id"]))
+
+# ============================================
+# TEACHER - ADD MATERIAL
+# ============================================
+
+@teacher_bp.route("/teacher/course/<int:course_id>/material/add", methods=["POST"])
+@login_required
+@teacher_required
+def add_material(course_id):
+    teacher_id = session["user_id"]
+    title = request.form.get("title")
+    description = request.form.get("description", "")
+    material_type = request.form.get("material_type", "file")
+    week_id = request.form.get("week_id") or None
+    file_url = None
+    
+    db = Database()
+    course = db.fetchone("SELECT id FROM courses WHERE id=%s AND teacher_id=%s", (course_id, session["user_id"]))
+    if not course:
+        flash("Course not found or you don't have permission.", "error")
+        db.close()
+        return redirect(url_for("teacher.courses"))
+    
+    if "file" in request.files and request.files["file"].filename != "":
+        file = request.files["file"]
+        if allowed_file(file.filename):
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            filename = secure_filename(file.filename)
+            filename = f"{int(datetime.now().timestamp())}_{filename}"
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            file_url = f"/static/uploads/{filename}"
+        else:
+            flash("File type not allowed.")
+            db.close()
+            return redirect(url_for("teacher.course_detail", course_id=course_id))
+    else:
+        file_url = request.form.get("link_url") or None
+    
+    db.execute("""
+        INSERT INTO study_materials
+            (course_id, week_id, teacher_id, material_type, title, description, file_url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """, (course_id, week_id, teacher_id, material_type, title, description, file_url))
+    db.close()
+    
+    flash("Study material added successfully.", "success")
+    return redirect(url_for("teacher.course_detail", course_id=course_id))
+
+# ============================================
+# TEACHER - DELETE MATERIAL
+# ============================================
+
+@teacher_bp.route("/teacher/material/delete/<int:material_id>", methods=["POST"])
+@login_required
+@teacher_required
+def delete_material(material_id):
+    db = Database()
+    mat = db.fetchone(
+        "SELECT * FROM study_materials WHERE id=%s AND teacher_id=%s",
+        (material_id, session["user_id"])
+    )
+    if mat:
+        if mat["file_url"] and mat["file_url"].startswith("/static/uploads/"):
+            disk_path = os.path.join("app", mat["file_url"].lstrip("/"))
+            if os.path.exists(disk_path):
+                os.remove(disk_path)
+        db.execute("DELETE FROM study_materials WHERE id=%s", (material_id,))
+        flash("Material deleted.", "success")
+        course_id = mat["course_id"]
+    else:
+        flash("Not found.", "error")
+        course_id = request.referrer
+    db.close()
+    return redirect(url_for("teacher.course_detail", course_id=course_id))
+
+# ============================================
+# TEACHER - ADD TASK
+# ============================================
+
+@teacher_bp.route("/teacher/course/<int:course_id>/task/add", methods=["POST"])
+@login_required
+@teacher_required
+def add_task(course_id):
+    teacher_id = session["user_id"]
+    title = request.form.get("title")
+    description = request.form.get("description", "")
+    week_id = request.form.get("week_id") or None
+    time_limit = request.form.get("time_limit_minutes") or None
+    due_date_str = request.form.get("due_date") or None
+    submission_type = request.form.get("submission_type", "text")
+    
+    due_date = None
+    if due_date_str:
+        try:
+            due_date = datetime.strptime(due_date_str, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            due_date = None
+    
+    db = Database()
+    course = db.fetchone("SELECT id FROM courses WHERE id=%s AND teacher_id=%s", (course_id, session["user_id"]))
+    if not course:
+        flash("Course not found or you don't have permission.", "error")
+        db.close()
+        return redirect(url_for("teacher.courses"))
+    
+    db.execute("""
+        INSERT INTO tasks
+            (course_id, week_id, teacher_id, title, description,
+             time_limit_minutes, due_date, submission_type)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (course_id, week_id, teacher_id, title, description,
+          time_limit, due_date, submission_type))
+    db.close()
+    
+    flash("Task created successfully.", "success")
+    return redirect(url_for("teacher.course_detail", course_id=course_id))
+
+# ============================================
+# TEACHER - DELETE TASK
+# ============================================
+
+@teacher_bp.route("/teacher/task/delete/<int:task_id>", methods=["POST"])
+@login_required
+@teacher_required
+def delete_task(task_id):
+    db = Database()
+    task = db.fetchone(
+        "SELECT * FROM tasks WHERE id=%s AND teacher_id=%s",
+        (task_id, session["user_id"])
+    )
+    if task:
+        db.execute("DELETE FROM tasks WHERE id=%s", (task_id,))
+        flash("Task deleted.", "success")
+        course_id = task["course_id"]
+    else:
+        flash("Task not found.", "error")
+        course_id = 0
+    db.close()
+    return redirect(url_for("teacher.course_detail", course_id=course_id))
+
+# ============================================
+# TEACHER - TASK SUBMISSIONS
+# ============================================
+
+@teacher_bp.route("/teacher/task/<int:task_id>/submissions")
+@login_required
+@teacher_required
+def task_submissions(task_id):
+    db = Database()
+    task = db.fetchone("SELECT * FROM tasks WHERE id=%s", (task_id,))
+    
+    if not task:
+        flash("Task not found.", "error")
+        db.close()
+        return redirect(url_for("teacher.courses"))
+    
+    if task["teacher_id"] != session["user_id"]:
+        flash("You don't have permission.", "error")
+        db.close()
+        return redirect(url_for("teacher.courses"))
+    
+    submissions = db.fetch("""
+        SELECT ts.*, u.fullname as student_name, u.username as student_username
+        FROM task_submissions ts
+        JOIN users u ON ts.student_id = u.id
+        WHERE ts.task_id = %s
+        ORDER BY ts.submitted_at DESC
+    """, (task_id,))
+    
+    db.close()
+    
+    return render_template(
+        "teacher/task_submissions.html",
+        username=session["username"],
+        role=session["role"],
+        task=task,
+        submissions=submissions,
+    )
+
+# ============================================
+# TEACHER - GRADE SUBMISSION
+# ============================================
+
+@teacher_bp.route("/teacher/submission/<int:submission_id>/grade", methods=["POST"])
+@login_required
+@teacher_required
+def grade_submission(submission_id):
+    grade = request.form.get("grade")
+    feedback = request.form.get("feedback", "")
+    task_id = request.form.get("task_id")
+    
+    db = Database()
+    db.execute("""
+        UPDATE task_submissions
+        SET grade=%s, feedback=%s, status='graded'
+        WHERE id=%s
+    """, (grade, feedback, submission_id))
+    db.close()
+    
+    flash("Submission graded successfully.", "success")
+    return redirect(url_for("teacher.task_submissions", task_id=task_id))
+
+# ============================================
+# TEACHER - RESOURCES
 # ============================================
 
 @teacher_bp.route("/teacher/resources", methods=["GET", "POST"])
+@login_required
+@teacher_required
 def resources():
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     teacher_id = session["user_id"]
     
-    # Get teacher's courses for dropdown
     courses = db.fetch("SELECT id, name FROM courses WHERE teacher_id = %s", (teacher_id,))
     
     if request.method == "POST":
@@ -199,31 +460,15 @@ def resources():
         description = request.form.get("description")
         link = request.form.get("link")
         
-        if not all([course_id, title]):
-            flash("Course and Title are required.", "error")
-            db.close()
-            return redirect(url_for("teacher.resources"))
-        
         db.execute("""
             INSERT INTO resources (course_id, teacher_id, title, description, link)
             VALUES (%s, %s, %s, %s, %s)
         """, (course_id, teacher_id, title, description, link))
         
-        # Send notification to students in this course
-        students = db.fetch("SELECT student_id FROM enrollments WHERE course_id=%s", (course_id,))
-        for student in students:
-            db.execute("""
-                INSERT INTO notifications (user_id, type, title, message, link)
-                VALUES (%s, 'system', 'New Resource Added', 
-                       CONCAT('A new resource has been added to your course: ', %s),
-                       '/student/resources')
-            """, (student['student_id'], title))
-        
         flash("Resource added successfully.", "success")
         db.close()
         return redirect(url_for("teacher.resources"))
     
-    # Get all resources for this teacher
     all_resources = db.fetch("""
         SELECT r.*, c.name as course_name
         FROM resources r
@@ -243,10 +488,9 @@ def resources():
     )
 
 @teacher_bp.route("/teacher/resources/delete/<int:resource_id>", methods=["POST"])
+@login_required
+@teacher_required
 def delete_resource(resource_id):
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     db.execute(
         "DELETE FROM resources WHERE id=%s AND teacher_id=%s",
@@ -255,142 +499,15 @@ def delete_resource(resource_id):
     db.close()
     flash("Resource deleted.", "success")
     return redirect(url_for("teacher.resources"))
-# ============================================
-# TEACHER - MARKS
-# ============================================
-
-@teacher_bp.route("/teacher/marks")
-def teacher_marks():
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
-    db = Database()
-    teacher_id = session["user_id"]
-    
-    courses = db.fetch("""
-        SELECT c.*, COUNT(DISTINCT e.id) as enrolled
-        FROM courses c
-        LEFT JOIN enrollments e ON c.id = e.course_id
-        WHERE c.teacher_id = %s
-        GROUP BY c.id
-    """, (teacher_id,))
-    
-    db.close()
-    
-    return render_template(
-        "teacher/marks.html",
-        username=session["username"],
-        role=session["role"],
-        courses=courses
-    )
-
-@teacher_bp.route("/teacher/marks/course/<int:course_id>", methods=["GET", "POST"])
-def teacher_manage_marks(course_id):
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
-    db = Database()
-    course = db.fetchone(
-        "SELECT * FROM courses WHERE id=%s AND teacher_id=%s",
-        (course_id, session["user_id"])
-    )
-    
-    if not course:
-        flash("Course not found or you don't have permission.", "error")
-        db.close()
-        return redirect(url_for("teacher.teacher_marks"))
-    
-    if request.method == "POST":
-        marks_model = MarksModel()
-        title = request.form.get("title")
-        total = float(request.form.get("total", 100))
-        exam_type = request.form.get("exam_type", "assignment")
-        weightage = float(request.form.get("weightage", 100))
-        
-        students = db.fetch(
-            "SELECT u.id FROM users u JOIN enrollments e ON u.id=e.student_id WHERE e.course_id=%s",
-            (course_id,)
-        )
-        
-        marked_count = 0
-        for student in students:
-            score = request.form.get(f"score_{student['id']}")
-            if score:
-                success, message = marks_model.add_marks(
-                    student['id'], course_id, title, float(score), total, exam_type, weightage
-                )
-                if success:
-                    marked_count += 1
-                    # Send notification to student
-                    db.execute("""
-                        INSERT INTO notifications (user_id, type, title, message, link)
-                        VALUES (%s, 'grade', 'New Grade Added', 
-                               CONCAT('You received a new grade for ', %s, ' in ', %s),
-                               '/student/marks')
-                    """, (student['id'], title, course['name']))
-        
-        marks_model.close()
-        flash(f"Marks added for {marked_count} students.", "success")
-        db.close()
-        return redirect(url_for("teacher.teacher_manage_marks", course_id=course_id))
-    
-    students = db.fetch("""
-        SELECT u.id, u.fullname, u.email,
-               (SELECT ROUND(AVG(score / total * 100), 1) 
-                FROM marks m 
-                WHERE m.student_id = u.id AND m.course_id = %s) as avg_percentage,
-               (SELECT COUNT(*) FROM marks m 
-                WHERE m.student_id = u.id AND m.course_id = %s) as marks_count
-        FROM users u
-        JOIN enrollments e ON u.id = e.student_id
-        WHERE e.course_id=%s AND u.role='student'
-        ORDER BY u.fullname
-    """, (course_id, course_id, course_id))
-    
-    existing_marks = db.fetch("""
-        SELECT m.*, u.fullname as student_name
-        FROM marks m
-        JOIN users u ON m.student_id = u.id
-        WHERE m.course_id = %s
-        ORDER BY m.created_at DESC
-    """, (course_id,))
-    
-    db.close()
-    
-    return render_template(
-        "teacher/manage_marks.html",
-        username=session["username"],
-        role=session["role"],
-        course=course,
-        students=students,
-        existing_marks=existing_marks
-    )
-
-# ============================================
-# TEACHER - ATTENDANCE (Using attendance blueprint)
-# ============================================
-
-# REMOVE THIS REDIRECT - It's causing the loop
-# @teacher_bp.route("/teacher/attendance")
-# def teacher_attendance_redirect():
-#     if teacher_required():
-#         return redirect(url_for("auth.login"))
-#     return redirect(url_for("attendance.teacher_attendance"))
-
-# Instead, use the attendance blueprint directly
-# The attendance routes are already registered under the "attendance" blueprint
-# So we don't need a redirect here
-
 
 # ============================================
 # TEACHER - REPORTS
 # ============================================
 
 @teacher_bp.route("/teacher/reports")
+@login_required
+@teacher_required
 def teacher_reports():
-    if teacher_required():
-        return redirect(url_for("auth.login"))
-    
     db = Database()
     teacher_id = session["user_id"]
     
@@ -435,5 +552,140 @@ def teacher_reports():
         username=session["username"],
         role=session["role"],
         course_performance=course_performance,
-        stats=stats
+        stats=stats,
     )
+
+# ============================================
+# TEACHER - MARKS
+# ============================================
+
+@teacher_bp.route("/teacher/marks")
+@login_required
+@teacher_required
+def teacher_marks():
+    db = Database()
+    teacher_id = session["user_id"]
+    
+    courses = db.fetch("""
+        SELECT c.*, COUNT(DISTINCT e.id) as enrolled
+        FROM courses c
+        LEFT JOIN enrollments e ON c.id = e.course_id
+        WHERE c.teacher_id = %s
+        GROUP BY c.id
+        ORDER BY c.name
+    """, (teacher_id,))
+    
+    db.close()
+    
+    return render_template(
+        "teacher/marks.html",
+        username=session["username"],
+        role=session["role"],
+        courses=courses
+    )
+
+
+@teacher_bp.route("/teacher/marks/course/<int:course_id>", methods=["GET", "POST"])
+@login_required
+@teacher_required
+def teacher_manage_marks(course_id):
+    db = Database()
+    
+    course = db.fetchone(
+        "SELECT * FROM courses WHERE id=%s AND teacher_id=%s",
+        (course_id, session["user_id"])
+    )
+    
+    if not course:
+        flash("Course not found or you don't have permission.", "error")
+        db.close()
+        return redirect(url_for("teacher.teacher_marks"))
+    
+    if request.method == "POST":
+        marks_model = MarksModel()
+        title = request.form.get("title")
+        total = float(request.form.get("total", 100))
+        exam_type = request.form.get("exam_type", "assignment")
+        weightage = float(request.form.get("weightage", 100))
+        
+        students = db.fetch(
+            "SELECT u.id FROM users u JOIN enrollments e ON u.id=e.student_id WHERE e.course_id=%s",
+            (course_id,)
+        )
+        
+        marked_count = 0
+        for student in students:
+            score = request.form.get(f"score_{student['id']}")
+            if score:
+                success, message = marks_model.add_marks(
+                    student['id'], course_id, title, float(score), total, exam_type, weightage
+                )
+                if success:
+                    marked_count += 1
+        
+        marks_model.close()
+        flash(f"Marks added for {marked_count} students.", "success")
+        db.close()
+        return redirect(url_for("teacher.teacher_manage_marks", course_id=course_id))
+    
+    students = db.fetch("""
+        SELECT u.id, u.fullname, u.email,
+               (SELECT ROUND(AVG(score / total * 100), 1) 
+                FROM marks m 
+                WHERE m.student_id = u.id AND m.course_id = %s) as avg_percentage,
+               (SELECT COUNT(*) FROM marks m 
+                WHERE m.student_id = u.id AND m.course_id = %s) as marks_count
+        FROM users u
+        JOIN enrollments e ON u.id = e.student_id
+        WHERE e.course_id=%s AND u.role='student'
+        ORDER BY u.fullname
+    """, (course_id, course_id, course_id))
+    
+    existing_marks = db.fetch("""
+        SELECT m.*, u.fullname as student_name
+        FROM marks m
+        JOIN users u ON m.student_id = u.id
+        WHERE m.course_id = %s
+        ORDER BY m.created_at DESC
+    """, (course_id,))
+    
+    db.close()
+    
+    return render_template(
+        "teacher/manage_marks.html",
+        username=session["username"],
+        role=session["role"],
+        course=course,
+        students=students,
+        existing_marks=existing_marks
+    )
+
+
+@teacher_bp.route("/teacher/marks/update/<int:mark_id>", methods=["POST"])
+@login_required
+@teacher_required
+def teacher_update_marks(mark_id):
+    score = request.form.get("score")
+    total = request.form.get("total", 100)
+    reason = request.form.get("reason", "")
+    
+    marks_model = MarksModel()
+    success, message = marks_model.update_marks(
+        mark_id, float(score), float(total), session["user_id"], reason
+    )
+    marks_model.close()
+    
+    flash(message, "success" if success else "error")
+    return redirect(request.referrer or url_for("teacher.teacher_marks"))
+
+
+@teacher_bp.route("/teacher/marks/delete/<int:mark_id>", methods=["POST"])
+@login_required
+@teacher_required
+def teacher_delete_marks(mark_id):
+    db = Database()
+    db.execute("DELETE FROM marks WHERE id=%s", (mark_id,))
+    db.close()
+    
+    flash("Marks record deleted successfully.", "success")
+    return redirect(request.referrer or url_for("teacher.teacher_marks"))

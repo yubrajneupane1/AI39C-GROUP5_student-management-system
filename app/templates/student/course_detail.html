@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}{{ course.name }}{% endblock %}
+{% block title %}{{ course.name }} - Acadlytics{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
@@ -27,7 +27,9 @@
     <button onclick="showTab('tasks')" class="tab-btn" style="padding: 8px 20px; border: none; background: none; cursor: pointer; font-weight: 600; color: #64748b;">✅ Tasks</button>
 </div>
 
-<!-- Lessons Tab -->
+<!-- ============================================ -->
+<!-- TAB 1: LESSONS -->
+<!-- ============================================ -->
 <div id="tab-lessons" class="tab-content">
     <div class="courses-section">
         <h2>Course Content</h2>
@@ -55,7 +57,9 @@
     </div>
 </div>
 
-<!-- Materials Tab -->
+<!-- ============================================ -->
+<!-- TAB 2: MATERIALS -->
+<!-- ============================================ -->
 <div id="tab-materials" class="tab-content" style="display: none;">
     <div class="courses-section">
         <h2>Study Materials</h2>
@@ -86,58 +90,242 @@
     </div>
 </div>
 
-<!-- Tasks Tab -->
+<!-- ============================================ -->
+<!-- TAB 3: TASKS (With Submission) -->
+<!-- ============================================ -->
 <div id="tab-tasks" class="tab-content" style="display: none;">
     <div class="courses-section">
         <h2>Tasks & Assignments</h2>
         {% if tasks %}
             {% for t in tasks %}
-            <div class="course-box" style="{% if t.submission_status == 'graded' %}border-left: 4px solid #10b981;{% elif t.submission_status == 'late' %}border-left: 4px solid #dc2626;{% elif t.submission_status == 'submitted' %}border-left: 4px solid #3b82f6;{% endif %}">
-                <div class="course-top">
-                    <h3>{{ t.title }}</h3>
+            <div class="task-card {% if t.submission_status == 'graded' %}graded{% elif t.submission_status == 'late' %}late{% elif t.submission_status == 'submitted' %}submitted{% endif %}" 
+                 style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #e5e7eb; {% if t.submission_status == 'graded' %}border-left: 4px solid #10b981;{% elif t.submission_status == 'late' %}border-left: 4px solid #dc2626;{% elif t.submission_status == 'submitted' %}border-left: 4px solid #3b82f6;{% endif %}">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 600; margin: 0;">{{ t.title }}</h3>
+                        <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                            {% if t.week_title %}
+                                <span style="font-size: 12px; color: #64748b;">📅 {{ t.week_title }}</span>
+                            {% endif %}
+                            {% if t.due_date %}
+                                <span style="font-size: 12px; color: #64748b;">Due: <strong>{{ t.due_date.strftime('%b %d, %Y %I:%M %p') }}</strong></span>
+                            {% endif %}
+                            {% if t.time_limit_minutes %}
+                                <span style="font-size: 12px; color: #64748b;">⏱ {{ t.time_limit_minutes }} min</span>
+                            {% endif %}
+                        </div>
+                    </div>
                     <div>
                         {% if t.submission_status == 'graded' %}
-                            <span class="grade" style="background: #10b981; color: white;">Graded</span>
+                            <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Graded</span>
                         {% elif t.submission_status == 'late' %}
-                            <span class="grade" style="background: #dc2626; color: white;">Late</span>
+                            <span style="background: #dc2626; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Late</span>
                         {% elif t.submission_status == 'submitted' %}
-                            <span class="grade" style="background: #3b82f6; color: white;">Submitted</span>
+                            <span style="background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Submitted</span>
+                        {% elif t.due_date and t.due_date < now %}
+                            <span style="background: #f59e0b; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Overdue</span>
                         {% else %}
-                            <span class="grade" style="background: #f59e0b; color: white;">Pending</span>
+                            <span style="background: #8b5cf6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Pending</span>
                         {% endif %}
                     </div>
                 </div>
-                <p style="font-size: 13px; color: #64748b; margin: 4px 0;">
-                    {% if t.due_date %}Due: {{ t.due_date.strftime('%b %d, %Y %I:%M %p') }}{% else %}No deadline{% endif %}
-                    {% if t.time_limit_minutes %} | Time: {{ t.time_limit_minutes }} min{% endif %}
-                </p>
+
                 {% if t.description %}
-                    <p style="margin: 8px 0; color: #666; font-size: 14px;">{{ t.description }}</p>
+                    <p style="margin: 12px 0; color: #475569; font-size: 14px; white-space: pre-wrap;">{{ t.description }}</p>
+                {% endif %}
+
+                <!-- ============================================ -->
+                <!-- GRADED RESULT -->
+                <!-- ============================================ -->
+                {% if t.submission_status == 'graded' %}
+                    <div style="background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; padding: 12px 16px; margin-top: 12px;">
+                        <h4 style="color: #065f46; margin: 0; font-size: 14px;">✅ Grade: {{ t.grade }}</h4>
+                        {% if t.feedback %}
+                            <p style="font-size: 13px; color: #065f46; margin: 4px 0 0 0;">💬 {{ t.feedback }}</p>
+                        {% endif %}
+                    </div>
+
+                <!-- ============================================ -->
+                <!-- ALREADY SUBMITTED -->
+                <!-- ============================================ -->
+                {% elif t.submission_id %}
+                    <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 12px 16px; margin-top: 12px;">
+                        <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                            ✅ Submitted on {{ t.submitted_at.strftime('%b %d, %Y at %I:%M %p') if t.submitted_at else '' }}
+                        </p>
+                        {% if t.submission_file %}
+                            <a href="{{ t.submission_file }}" target="_blank" style="color: #4f46e5; font-weight: 600; font-size: 13px;">
+                                📎 View your file
+                            </a>
+                        {% endif %}
+                        {% if t.text_answer %}
+                            <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 8px;">
+                                <p style="margin: 0; font-size: 13px; color: #1e293b;">{{ t.text_answer }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                <!-- ============================================ -->
+                <!-- OVERDUE - Cannot Submit -->
+                <!-- ============================================ -->
+                {% elif t.due_date and t.due_date < now %}
+                    <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 16px; margin-top: 12px;">
+                        <p style="margin: 0; color: #92400e; font-size: 14px;">
+                            ⚠️ This task is past its due date. Submission is closed.
+                        </p>
+                    </div>
+
+                <!-- ============================================ -->
+                <!-- ACTIVE - Show Submit Form -->
+                <!-- ============================================ -->
+                {% else %}
+                    <!-- Timer (if time limit) -->
+                    {% if t.time_limit_minutes %}
+                    <div class="timer-box" id="timer-{{ t.id }}" style="display: inline-flex; align-items: center; gap: 8px; background: #1e293b; color: white; border-radius: 8px; padding: 8px 16px; font-size: 14px; font-weight: 600; margin: 12px 0;">
+                        ⏱ <span id="time-display-{{ t.id }}">{{ t.time_limit_minutes }}:00</span> remaining
+                    </div>
+                    {% endif %}
+
+                    <!-- Submission Form -->
+                    <div style="background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin-top: 12px;">
+                        <form method="POST" 
+                              action="{{ url_for('student.submit_task', task_id=t.id) }}" 
+                              enctype="multipart/form-data"
+                              onsubmit="return confirm('Are you sure you want to submit? You cannot resubmit after this.');">
+                            
+                            {% if t.submission_type in ['text', 'both'] %}
+                                <div style="margin-bottom: 12px;">
+                                    <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 4px;">Your Answer</label>
+                                    <textarea name="text_answer" rows="5" 
+                                              placeholder="Write your answer here..." 
+                                              style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit;"
+                                              {% if t.submission_type == 'text' %}required{% endif %}></textarea>
+                                </div>
+                            {% endif %}
+
+                            {% if t.submission_type in ['file', 'both'] %}
+                                <div style="margin-bottom: 12px;">
+                                    <label style="display: block; font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 4px;">Upload File</label>
+                                    <input type="file" name="file" 
+                                           accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.zip"
+                                           style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;"
+                                           {% if t.submission_type == 'file' %}required{% endif %}>
+                                    <p style="font-size: 12px; color: #9ca3af; margin-top: 4px;">
+                                        Accepted: PDF, DOC, DOCX, PPT, PPTX, TXT, images, ZIP
+                                    </p>
+                                </div>
+                            {% endif %}
+
+                            <button type="submit" class="btn-submit" 
+                                    style="background: #4f46e5; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                                📤 Submit Task
+                            </button>
+                        </form>
+                    </div>
                 {% endif %}
             </div>
             {% endfor %}
         {% else %}
-            <p style="color: #94a3b8;">No tasks available.</p>
+            <div class="course-box">
+                <div class="course-top">
+                    <h3>No tasks available</h3>
+                </div>
+                <p class="record-date">Your teacher hasn't assigned any tasks yet.</p>
+            </div>
         {% endif %}
     </div>
 </div>
 
+<!-- ============================================ -->
+<!-- TIMER SCRIPT -->
+<!-- ============================================ -->
 <script>
 function showTab(tabName) {
-    // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(function(tab) {
         tab.style.display = 'none';
     });
-    // Show selected tab
-    document.getElementById('tab-' + tabName).style.display = 'block';
-    // Update button styles
     document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.classList.remove('active');
         btn.style.color = '#64748b';
         btn.style.borderBottom = 'none';
     });
-    // Highlight active button
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    event.target.classList.add('active');
     event.target.style.color = '#4f46e5';
     event.target.style.borderBottom = '2px solid #4f46e5';
 }
+
+// Timer logic for tasks with time limits
+{% for t in tasks %}
+    {% if t.time_limit_minutes and not t.submission_id and not (t.due_date and t.due_date < now) %}
+    (function() {
+        var taskId = {{ t.id }};
+        var limitMins = {{ t.time_limit_minutes }};
+        var totalSecs = limitMins * 60;
+        var storageKey = 'task_start_' + taskId;
+        
+        if (!localStorage.getItem(storageKey)) {
+            localStorage.setItem(storageKey, Date.now().toString());
+        }
+        
+        var startTime = parseInt(localStorage.getItem(storageKey));
+        var timerEl = document.getElementById('timer-' + taskId);
+        var displayEl = document.getElementById('time-display-' + taskId);
+        var submitBtn = document.querySelector('#timer-' + taskId + ' ~ form .btn-submit');
+        
+        function tick() {
+            var elapsed = Math.floor((Date.now() - startTime) / 1000);
+            var remaining = totalSecs - elapsed;
+            
+            if (remaining <= 0) {
+                if (displayEl) displayEl.textContent = '0:00';
+                if (timerEl) timerEl.style.background = '#dc2626';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '⏰ Time Expired';
+                }
+                return;
+            }
+            
+            var mins = Math.floor(remaining / 60);
+            var secs = remaining % 60;
+            if (displayEl) {
+                displayEl.textContent = mins + ':' + String(secs).padStart(2, '0');
+            }
+            
+            if (remaining <= 300 && timerEl) {
+                timerEl.style.background = '#dc2626';
+            }
+            
+            setTimeout(tick, 1000);
+        }
+        tick();
+    })();
+    {% endif %}
+{% endfor %}
 </script>
+
+<style>
+.task-card {
+    transition: box-shadow 0.2s;
+}
+.task-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.tab-btn {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tab-btn:hover {
+    color: #4f46e5;
+}
+.btn-submit:hover {
+    background: #4338ca !important;
+}
+.btn-submit:disabled {
+    background: #93c5fd !important;
+    cursor: not-allowed;
+}
+</style>
 {% endblock %}
