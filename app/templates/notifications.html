@@ -1,13 +1,9 @@
-{% extends 'layouts/base.html' %}
-
-{% block content %}
-<h2>Notifications</h2>
-{% endblock %}
 {% extends "layouts/base.html" %}
 
 {% block title %}Notifications - Acadlytics{% endblock %}
 
 {% block content %}
+
 <div class="dashboard-header">
     <h1>🔔 Notifications</h1>
     <p>Your latest notifications and alerts</p>
@@ -16,13 +12,18 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
         <span class="grade">{{ unread_count }} unread</span>
-        <span class="grade" style="background: #64748b; color: white;">{{ notifications|length }} total</span>
+        <span class="grade" style="background: #64748b; color: white;">
+            {{ notifications|length }} total
+        </span>
     </div>
+
     <div>
         <a href="{{ url_for('notification.notification_preferences') }}" class="edit-btn">
             ⚙️ Preferences
         </a>
-        <a href="{{ url_for('notification.view_notifications') }}" class="edit-btn" style="background: #4f46e5; color: white;">
+        <a href="{{ url_for('notification.view_notifications') }}"
+           class="edit-btn"
+           style="background: #4f46e5; color: white;">
             🔄 Refresh
         </a>
     </div>
@@ -36,11 +37,16 @@
                 <div>
                     <h3>{{ n.title }}</h3>
                     <p style="margin: 4px 0; color: #475569;">{{ n.message }}</p>
+
                     <p class="record-date" style="font-size: 12px;">
                         {{ n.created_at.strftime('%B %d, %Y at %I:%M %p') }}
                         {% if n.type %}
-                            | Type: <span class="grade" style="font-size: 10px;">{{ n.type | capitalize }}</span>
+                            | Type:
+                            <span class="grade" style="font-size: 10px;">
+                                {{ n.type | capitalize }}
+                            </span>
                         {% endif %}
+
                         {% if not n.is_read %}
                             | <span style="color: #4f46e5; font-weight: 600;">🔵 New</span>
                         {% else %}
@@ -48,9 +54,14 @@
                         {% endif %}
                     </p>
                 </div>
+
                 <div class="action-group">
                     {% if n.link %}
-                        <a href="{{ n.link }}" class="btn-view" style="padding: 4px 12px; font-size: 12px; text-decoration: none;">View</a>
+                        <a href="{{ n.link }}"
+                           class="btn-view"
+                           style="padding: 4px 12px; font-size: 12px; text-decoration: none;">
+                            View
+                        </a>
                     {% endif %}
                 </div>
             </div>
@@ -65,4 +76,5 @@
         </div>
     {% endif %}
 </div>
+
 {% endblock %}

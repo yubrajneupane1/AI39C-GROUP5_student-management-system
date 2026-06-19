@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/nischal
 {% extends "layouts/base.html" %}
 
 {% block title %}Fees - Admin{% endblock %}
@@ -18,77 +21,169 @@
 {% endwith %}
 
 <div class="topbar-action">
-    <a href="#" onclick="document.getElementById('addFeeForm').style.display='block'; return false;">
-        <button class="add-btn">+ Add Fee Record</button>
-    </a>
+    <button class="add-btn"
+            onclick="document.getElementById('addFeeForm').style.display='block'">
+        + Add Fee Record
+    </button>
 </div>
 
 <!-- Add Fee Form -->
-<div id="addFeeForm" style="display: none; background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+<div id="addFeeForm"
+     style="display:none; background:#f8fafc; padding:20px; border-radius:8px; margin-bottom:20px; border:1px solid #e5e7eb;">
+
     <h3>Add Fee Record</h3>
+
     <form method="POST" action="/admin/fees/add">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
             <div>
                 <label>Student</label>
-                <select name="student_id" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <select name="student_id" required
+                        style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:4px;">
                     <option value="">Select Student</option>
+
                     {% for s in students %}
-                        <option value="{{ s.id }}">{{ s.fullname }}</option>
+                    <option value="{{ s.id }}">
+                        {{ s.fullname }}
+                    </option>
                     {% endfor %}
+
                 </select>
             </div>
+
             <div>
                 <label>Amount</label>
-                <input type="number" name="amount" step="0.01" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <input type="number"
+                       name="amount"
+                       step="0.01"
+                       required
+                       style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:4px;">
             </div>
+
             <div>
                 <label>Description</label>
-                <input type="text" name="description" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <input type="text"
+                       name="description"
+                       required
+                       style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:4px;">
             </div>
+
             <div>
                 <label>Due Date</label>
-                <input type="date" name="due_date" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <input type="date"
+                       name="due_date"
+                       required
+                       style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:4px;">
             </div>
+
         </div>
-        <div style="margin-top: 12px;">
-            <button type="submit" class="btn-primary">Add Fee</button>
-            <button type="button" onclick="document.getElementById('addFeeForm').style.display='none';" class="logout-btn">Cancel</button>
+
+        <div style="margin-top:12px;">
+            <button type="submit" class="btn-primary">
+                Add Fee
+            </button>
+
+            <button type="button"
+                    class="logout-btn"
+                    onclick="document.getElementById('addFeeForm').style.display='none'">
+                Cancel
+            </button>
         </div>
+
     </form>
 </div>
 
 <div class="courses-section">
+
     <h2>All Fee Records</h2>
+
     {% if fees %}
+
         {% for f in fees %}
+
         <div class="course-box">
+
             <div class="course-top">
+
                 <h3>{{ f.description }}</h3>
+
                 <div class="action-group">
-                    <span class="grade">Rs {{ f.amount }}</span>
-                    <span class="grade {{ f.status }}">{{ f.status | capitalize }}</span>
-                    <form method="POST" action="/admin/fees/update/{{ f.id }}" style="display: inline;">
-                        <select name="status" onchange="this.form.submit()" style="padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;">
-                            <option value="unpaid" {% if f.status == 'unpaid' %}selected{% endif %}>Unpaid</option>
-                            <option value="paid" {% if f.status == 'paid' %}selected{% endif %}>Paid</option>
-                            <option value="partial" {% if f.status == 'partial' %}selected{% endif %}>Partial</option>
-                            <option value="overdue" {% if f.status == 'overdue' %}selected{% endif %}>Overdue</option>
+
+                    <span class="grade">
+                        Rs {{ f.amount }}
+                    </span>
+
+                    <span class="grade {{ f.status }}">
+                        {{ f.status|capitalize }}
+                    </span>
+
+                    <form method="POST"
+                          action="/admin/fees/update/{{ f.id }}"
+                          style="display:inline;">
+
+                        <select name="status"
+                                onchange="this.form.submit()"
+                                style="padding:4px; border:1px solid #d1d5db; border-radius:4px;">
+
+                            <option value="unpaid"
+                                {% if f.status == 'unpaid' %}selected{% endif %}>
+                                Unpaid
+                            </option>
+
+                            <option value="paid"
+                                {% if f.status == 'paid' %}selected{% endif %}>
+                                Paid
+                            </option>
+
+                            <option value="partial"
+                                {% if f.status == 'partial' %}selected{% endif %}>
+                                Partial
+                            </option>
+
+                            <option value="overdue"
+                                {% if f.status == 'overdue' %}selected{% endif %}>
+                                Overdue
+                            </option>
+
                         </select>
+
                     </form>
-                    <form method="POST" action="/admin/fees/delete/{{ f.id }}" style="display: inline;" onsubmit="return confirm('Delete this fee record?');">
-                        <button type="submit" class="delete-btn">Delete</button>
+
+                    <form method="POST"
+                          action="/admin/fees/delete/{{ f.id }}"
+                          style="display:inline;"
+                          onsubmit="return confirm('Delete this fee record?');">
+
+                        <button type="submit" class="delete-btn">
+                            Delete
+                        </button>
+
                     </form>
+
                 </div>
+
             </div>
-            <p class="record-date">Student: {{ f.student_name }} | Due: {{ f.due_date }}</p>
+
+            <p class="record-date">
+                Student: {{ f.student_name }}
+                |
+                Due: {{ f.due_date }}
+            </p>
+
         </div>
+
         {% endfor %}
+
     {% else %}
+
         <div class="course-box">
             <div class="course-top">
                 <h3>No fee records</h3>
             </div>
         </div>
+
     {% endif %}
+
 </div>
 {% endblock %}
